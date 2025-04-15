@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'landing_page.dart';
 import 'home_page.dart';
-import './ChartPage/chart_page.dart';
+import 'chartPage/chart_page.dart';
 
 void main() {
   runApp(MyApp());
