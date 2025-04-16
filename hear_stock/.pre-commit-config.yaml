@@ -1,0 +1,20 @@
+- repo: https://github.com/dart-lang/dart_style
+  rev: v2.0.0
+  hooks:
+    - id: dartfmt
+      name: Dart Format
+      files: \.dart$
+
+- repo: https://github.com/pre-commit/mirrors-flutter
+  rev: v1.0.0
+  hooks:
+    - id: flutter-format
+      name: Flutter Format
+      files: \.dart$
+
+- repo: https://github.com/pre-commit/mirrors-dart-analyzer
+  rev: v1.0.0
+  hooks:
+    - id: dart-analyzer
+      name: Dart Analyzer
+      files: \.dart$
