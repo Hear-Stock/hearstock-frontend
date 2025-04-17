@@ -35,6 +35,9 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   speech_to_text: ^6.6.2
+  # flutter_tts: ^3.2.2
+  flutter_sound: ^9.1.6
+  audioplayers: ^0.20.1
   # syncfusion_flutter_charts: ^19.4.55
 
 dev_dependencies:
