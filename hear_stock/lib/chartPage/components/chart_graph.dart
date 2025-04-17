@@ -1,9 +1,47 @@
+import 'dart:convert'; // JSON 파싱을 위해 추가
+import 'package:flutter/services.dart'; // rootBundle을 사용하기 위해 추가
 import 'package:flutter/material.dart';
 
-class ChartGraph extends StatelessWidget {
+class ChartGraph extends StatefulWidget {
   final String timeline;
 
   ChartGraph({required this.timeline});
+
+  @override
+  _ChartGraphState createState() => _ChartGraphState();
+}
+
+class _ChartGraphState extends State<ChartGraph> {
+  String selectedPrice = ""; // 선택된 주식 가격을 표시
+  List<ChartData> data = []; // JSON에서 불러온 데이터
+
+  @override
+  void initState() {
+    super.initState();
+    // 앱 시작 시 데이터 읽기
+    loadData();
+  }
+
+  // JSON 데이터를 읽어오는 함수
+  Future<void> loadData() async {
+    final String response = await rootBundle.loadString(
+      'assets/data/chart_data.json', // JSON 파일 경로
+    );
+    final List<dynamic> dataList = json.decode(response);
+
+    // 데이터 모델로 변환
+    setState(() {
+      data =
+          dataList
+              .map(
+                (item) => ChartData(
+                  DateTime.parse(item['date']),
+                  item['price'].toDouble(),
+                ),
+              )
+              .toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,31 +51,66 @@ class ChartGraph extends StatelessWidget {
       color: Color(0xff131313),
       height: 250,
       width: double.infinity,
-      child: CustomPaint(painter: ChartPainter()),
+      child: GestureDetector(
+        onPanUpdate: (details) {
+          setState(() {
+            selectedPrice = getPriceFromPosition(
+              details.localPosition,
+            ); // 드래그 시 가격 갱신
+          });
+        },
+        onTapUp: (details) {
+          setState(() {
+            selectedPrice = getPriceFromPosition(
+              details.localPosition,
+            ); // 클릭 시 가격 갱신
+          });
+        },
+        child: CustomPaint(painter: ChartPainter(data: data)),
+      ),
     );
+  }
+
+  // 클릭된 위치에 해당하는 주식 가격을 구하는 메소드
+  String getPriceFromPosition(Offset position) {
+    if (data.isEmpty) return "";
+
+    // X, Y 축의 범위 계산
+    final double chartWidth = MediaQuery.of(context).size.width;
+    final double chartHeight = 250;
+
+    double scaleX = chartWidth / (data.length - 1);
+    double scaleY =
+        chartHeight /
+        (data.map((e) => e.price).reduce((a, b) => a > b ? a : b) -
+            data.map((e) => e.price).reduce((a, b) => a < b ? a : b));
+
+    // X축 위치에 맞는 가격을 찾기
+    int closestIndex = ((position.dx / scaleX).round()).clamp(
+      0,
+      data.length - 1,
+    );
+    double closestPrice = data[closestIndex].price;
+
+    // 콘솔에 출력
+    print("Date: ${data[closestIndex].date}, Price: \$${closestPrice}");
+
+    return "${data[closestIndex].date.toLocal().toString().split(' ')[0]}: \$${closestPrice.toString()}"; // 날짜와 가격을 반환
   }
 }
 
 class ChartPainter extends CustomPainter {
+  final List<ChartData> data;
+
+  ChartPainter({required this.data});
+
   @override
   void paint(Canvas canvas, Size size) {
-    // 차트 그리기
     final Paint linePaint =
         Paint()
           ..color = Colors.orange
           ..strokeWidth = 2
           ..style = PaintingStyle.stroke;
-
-    // 데이터: 가격 날짜 하드코딩
-    final List<ChartData> data = [
-      ChartData(DateTime(2025, 1, 17), 53700),
-      ChartData(DateTime(2025, 1, 18), 54000),
-      ChartData(DateTime(2025, 1, 19), 53000),
-      ChartData(DateTime(2025, 1, 20), 56000),
-      ChartData(DateTime(2025, 1, 21), 55000),
-      ChartData(DateTime(2025, 1, 22), 56000),
-      ChartData(DateTime(2025, 1, 23), 57000),
-    ];
 
     // 최대값과 최소값 계산
     double minPrice = data[0].price;
