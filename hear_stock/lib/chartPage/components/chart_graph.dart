@@ -8,8 +8,10 @@ class ChartGraph extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+      padding: const EdgeInsets.all(10),
       color: Color(0xff131313),
-      height: 300,
+      height: 250,
       width: double.infinity,
       child: CustomPaint(painter: ChartPainter()),
     );
