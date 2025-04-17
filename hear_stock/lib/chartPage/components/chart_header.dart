@@ -12,16 +12,16 @@ class ChartHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          headerTitle, // 동적으로 받은 headerTitle을 표시
+          headerTitle,
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Colors.white, // 색상은 필요에 맞게 조정
           ),
         ),
-        SizedBox(height: 8), // '엔비디아'와 '주식' 사이에 간격
+        SizedBox(height: 8),
         Text(
-          subtitle, // 동적으로 받은 subtitle을 표시
+          subtitle,
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,

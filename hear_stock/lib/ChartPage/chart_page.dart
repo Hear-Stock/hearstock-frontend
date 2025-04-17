@@ -12,7 +12,7 @@ class _ChartPageState extends State<ChartPage> {
   // 선택된 시간 옵션
   String selectedTimeline = "3달";
 
-  // 시간 옵션 버튼 클릭 시 업데이트 메소드
+  // 시간 옵션 버튼 클릭 시 업데이트하는 메소드
   void updateTimeline(String newTimeline) {
     setState(() {
       selectedTimeline = newTimeline;
@@ -51,17 +51,7 @@ class _ChartPageState extends State<ChartPage> {
           ),
           SizedBox(height: 10),
           // 차트 그래프
-          Container(
-            margin: EdgeInsets.symmetric(horizontal: 20),
-            height: 300,
-            color: Colors.grey[300],
-            child: Center(
-              child: Text(
-                '그래프 (${selectedTimeline})',
-                style: TextStyle(fontSize: 20, color: Colors.black),
-              ),
-            ),
-          ),
+          ChartGraph(timeline: selectedTimeline),
         ],
       ),
     );
