@@ -10,6 +10,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      // 기본 폰트 Pretendard로 설정
+      theme: ThemeData(fontFamily: "Pretendard"),
       // 초기 화면: LandingPage
       initialRoute: '/',
       routes: {
