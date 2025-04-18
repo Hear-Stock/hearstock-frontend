@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'landing_page.dart';
 import 'home_page.dart';
+import 'chartPage/chart_page.dart';
 
 void main() {
   runApp(MyApp());
@@ -17,6 +18,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => LandingPage(),
         '/home': (context) => HomePage(),
+        '/chart': (context) => ChartPage(),
       },
     );
   }
