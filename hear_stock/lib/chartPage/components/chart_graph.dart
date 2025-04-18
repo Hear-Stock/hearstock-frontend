@@ -57,7 +57,7 @@ class _ChartGraphState extends State<ChartGraph> {
   // 사운드폰트 로딩 함수
   Future<void> loadSoundFont() async {
     soundfontId = await midiPro.loadSoundfont(
-      path: "assets/sf2/Piano.sf2",
+      path: "assets/sf2/Synthesiser.sf2",
       bank: 0,
       program: 0,
     );
@@ -142,9 +142,14 @@ class _ChartGraphState extends State<ChartGraph> {
     int key = mapPriceToKey(closestPrice);
     print("🎵 MIDI Key: $key");
 
-    // 노트 재생
     if (soundfontId != null) {
-      midiPro.playNote(sfId: soundfontId!, channel: 0, key: key, velocity: 127);
+      // 🔊 노트 재생
+      midiPro.playNote(sfId: soundfontId!, channel: 0, key: key, velocity: 100);
+
+      // ⏱️ 일정 시간 뒤에 해당 노트를 정지시킴
+      Future.delayed(const Duration(milliseconds: 150), () {
+        midiPro.stopNote(sfId: soundfontId!, channel: 0, key: key);
+      });
     }
 
     return "${data[closestIndex].date.toLocal().toString().split(' ')[0]}: \$${closestPrice.toString()}"; // 날짜와 가격을 반환
