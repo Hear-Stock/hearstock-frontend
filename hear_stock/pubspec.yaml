@@ -1,8 +1,8 @@
 name: hear_stock
-description: "A new Flutter project."
+description: 'A new Flutter project.'
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: "none" # Remove this line if you wish to publish to pub.dev
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -34,7 +34,13 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  speech_to_text: ^6.6.2
+  speech_to_text: ^7.0.0
+  # https://pub.dev/packages/flutter_midi_pro
+  flutter_midi_pro: ^3.1.4
+  # flutter_tts: ^3.2.2
+  # flutter_sound: ^9.1.6
+  # audioplayers: ^0.20.1
+  # syncfusion_flutter_charts: ^19.4.55
 
 dev_dependencies:
   flutter_test:
@@ -54,6 +60,8 @@ dev_dependencies:
 flutter:
   assets:
     - assets/images/
+    - assets/data/
+    - assets/sf2/
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
