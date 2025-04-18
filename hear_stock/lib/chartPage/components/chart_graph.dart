@@ -1,6 +1,7 @@
 import 'dart:convert'; // JSON 파싱을 위해 추가
 import 'package:flutter/services.dart'; // rootBundle을 사용하기 위해 추가
 import 'package:flutter/material.dart';
+import 'package:flutter_midi_pro/flutter_midi_pro.dart';
 
 class ChartGraph extends StatefulWidget {
   final String timeline;
@@ -15,11 +16,18 @@ class _ChartGraphState extends State<ChartGraph> {
   String selectedPrice = ""; // 선택된 주식 가격을 표시
   List<ChartData> data = []; // JSON에서 불러온 데이터
 
+  double minPrice = 0;
+  double maxPrice = 1;
+
+  final midiPro = MidiPro(); // midiPro 인스턴스 생성
+  int? soundfontId;
+
   @override
   void initState() {
     super.initState();
     // 앱 시작 시 데이터 읽기
     loadData();
+    loadSoundFont();
   }
 
   // JSON 데이터를 읽어오는 함수
@@ -40,7 +48,26 @@ class _ChartGraphState extends State<ChartGraph> {
                 ),
               )
               .toList();
+
+      minPrice = data.map((e) => e.price).reduce((a, b) => a < b ? a : b);
+      maxPrice = data.map((e) => e.price).reduce((a, b) => a > b ? a : b);
     });
+  }
+
+  // 사운드폰트 로딩 함수
+  Future<void> loadSoundFont() async {
+    soundfontId = await midiPro.loadSoundfont(
+      path: "assets/sf2/Piano.sf2",
+      bank: 0,
+      program: 0,
+    );
+    await midiPro.selectInstrument(
+      sfId: soundfontId!,
+      channel: 0,
+      bank: 0,
+      program: 0,
+    );
+    print("🎵 SoundFont loaded.");
   }
 
   @override
@@ -90,10 +117,35 @@ class _ChartGraphState extends State<ChartGraph> {
       0,
       data.length - 1,
     );
+
+    // 가격에 따라 MIDI key 계산
+    int mapPriceToKey(double price) {
+      const int minKey = 40;
+      const int maxKey = 80;
+
+      // 가격을 0~1로 정규화
+      double normalized = ((price - minPrice) / (maxPrice - minPrice)).clamp(
+        0.0,
+        1.0,
+      );
+
+      // 정규화된 값을 key 범위에 맞게 변환
+      return (minKey + (normalized * (maxKey - minKey))).round();
+    }
+
     double closestPrice = data[closestIndex].price;
 
-    // 콘솔에 출력
-    print("Date: ${data[closestIndex].date}, Price: \$${closestPrice}");
+    // 콘솔 출력
+    print("📈 ${data[closestIndex].date}: \$${closestPrice}");
+
+    // 가격 → key 변환
+    int key = mapPriceToKey(closestPrice);
+    print("🎵 MIDI Key: $key");
+
+    // 노트 재생
+    if (soundfontId != null) {
+      midiPro.playNote(sfId: soundfontId!, channel: 0, key: key, velocity: 127);
+    }
 
     return "${data[closestIndex].date.toLocal().toString().split(' ')[0]}: \$${closestPrice.toString()}"; // 날짜와 가격을 반환
   }

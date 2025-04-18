@@ -38,7 +38,7 @@ class _ChartPageState extends State<ChartPage> {
             child: Padding(
               padding: const EdgeInsets.only(left: 20.0),
               child: ChartHeader(
-                headerTitle: "엔비디아",
+                headerTitle: "삼성전자",
                 subtitle: "주식을 불러왔어요.\n추가 정보를 요청하세요.",
               ),
             ),
