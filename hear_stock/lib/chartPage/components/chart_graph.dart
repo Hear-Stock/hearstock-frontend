@@ -143,12 +143,32 @@ class _ChartGraphState extends State<ChartGraph> {
     print("🎵 MIDI Key: $key");
 
     if (soundfontId != null) {
-      // 🔊 노트 재생
-      midiPro.playNote(sfId: soundfontId!, channel: 0, key: key, velocity: 100);
+      final double positionRatio = (position.dx / chartWidth).clamp(0.0, 1.0);
 
-      // ⏱️ 일정 시간 뒤에 해당 노트를 정지시킴
+      // 🎚️ velocity 비율 계산
+      final int velocityLeft = ((1 - positionRatio) * 127).round();
+      final int velocityRight = (positionRatio * 127).round();
+
+      // 🔊 왼쪽 채널 재생
+      midiPro.playNote(
+        sfId: soundfontId!,
+        channel: 0,
+        key: key,
+        velocity: velocityLeft,
+      );
+
+      // 🔊 오른쪽 채널 재생
+      midiPro.playNote(
+        sfId: soundfontId!,
+        channel: 1,
+        key: key,
+        velocity: velocityRight,
+      );
+
+      // ⏱️ 일정 시간 뒤에 모두 정지
       Future.delayed(const Duration(milliseconds: 150), () {
         midiPro.stopNote(sfId: soundfontId!, channel: 0, key: key);
+        midiPro.stopNote(sfId: soundfontId!, channel: 1, key: key);
       });
     }
 
