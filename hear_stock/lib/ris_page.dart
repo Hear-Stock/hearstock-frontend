@@ -22,12 +22,15 @@ class _RsiPageState extends State<RsiPage> {
   };
 
   final List<_IndicatorItem> items = [
-    _IndicatorItem(title: '시가총액', color: Colors.red),
-    _IndicatorItem(title: '배당수익률', color: Colors.yellow),
-    _IndicatorItem(title: 'PBR', color: Colors.green),
-    _IndicatorItem(title: 'PER', color: Colors.blue),
-    _IndicatorItem(title: 'ROE', color: Colors.white),
-    _IndicatorItem(title: 'PSR', color: Colors.pink),
+    _IndicatorItem(title: '시가총액', backgroundColor: Color(0xFF4A90E2)),
+    _IndicatorItem(title: '배당수익률', backgroundColor: Color(0xFFFF6B6B)),
+    _IndicatorItem(title: 'PBR', backgroundColor: Color(0xFF2ECC71)),
+    _IndicatorItem(title: 'PER', backgroundColor: Color(0xFFFFC107)),
+    _IndicatorItem(title: 'ROE', backgroundColor: Color(0xFFAF7AC5)),
+    _IndicatorItem(
+      title: 'PSR',
+      backgroundColor: Color.fromARGB(255, 243, 182, 182),
+    ),
   ];
 
   Future<void> _onIndicatorPressed(String title) async {
@@ -35,7 +38,6 @@ class _RsiPageState extends State<RsiPage> {
       selectedTitle = title;
       selectedValue = indicatorValues[title] ?? '';
     });
-
     await flutterTts.speak('$title, ${indicatorValues[title]}');
   }
 
@@ -47,75 +49,111 @@ class _RsiPageState extends State<RsiPage> {
 
   @override
   Widget build(BuildContext context) {
+    final textScale = MediaQuery.of(context).textScaleFactor;
+
     return Scaffold(
-      backgroundColor: Color(0xFF262626),
+      backgroundColor: Color(0xff262626),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(30, 60, 30, 30),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              selectedTitle,
-              style: TextStyle(
-                fontSize: 22,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+            Semantics(
+              header: true,
+              child: Text(
+                selectedTitle,
+                style: TextStyle(
+                  fontSize: 22 * textScale,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
             ),
             Text(
               selectedValue,
               style: TextStyle(
-                fontSize: 34,
+                fontSize: 34 * textScale,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
             SizedBox(height: 30),
             Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 20,
-                mainAxisSpacing: 20,
-                childAspectRatio: 1.2,
-                children:
-                    items.map((item) {
-                      return Semantics(
-                        label: '${item.title} 버튼',
-                        button: true,
-                        child: GestureDetector(
-                          onTap: () => _onIndicatorPressed(item.title),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: item.color,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            padding: EdgeInsets.all(16),
-                            child: Center(
-                              child: Text(
-                                item.title,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w900,
-                                  color:
-                                      (item.color == Colors.yellow ||
-                                              item.color == Colors.white)
-                                          ? Colors.black
-                                          : Colors.white,
+              child: FocusTraversalGroup(
+                policy: ReadingOrderTraversalPolicy(),
+                child: GridView(
+                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 200,
+                    crossAxisSpacing: 20,
+                    mainAxisSpacing: 20,
+                    childAspectRatio: 1.2,
+                  ),
+                  children:
+                      items.map((item) {
+                        final isSelected = item.title == selectedTitle;
+
+                        return Semantics(
+                          label:
+                              '${item.title} 버튼' + (isSelected ? ', 선택됨' : ''),
+                          button: true,
+                          selected: isSelected,
+                          child: Tooltip(
+                            message: '${item.title} 선택',
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: item.backgroundColor,
+                                foregroundColor: Color(0xff262626),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  side: BorderSide(
+                                    color:
+                                        isSelected
+                                            ? Colors.white
+                                            : Colors.transparent,
+                                    width: 3,
+                                  ),
                                 ),
+                              ),
+                              onPressed: () => _onIndicatorPressed(item.title),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    item.title,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 22 * textScale,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                  if (isSelected)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 8.0),
+                                      child: Icon(
+                                        Icons.check_circle,
+                                        size: 20 * textScale,
+                                        color: Colors.white,
+                                        semanticLabel: '선택됨',
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
                           ),
-                        ),
-                      );
-                    }).toList(),
+                        );
+                      }).toList(),
+                ),
               ),
             ),
             SizedBox(height: 10),
             Center(
               child: Text(
-                '위로 스크롤해서 마이크를 작동시키세요.',
-                style: TextStyle(color: Colors.white, fontSize: 15),
+                '아래로 스크롤해서 마이크를 작동시키세요.',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 15 * textScale,
+                ),
+                textAlign: TextAlign.center,
               ),
             ),
           ],
@@ -127,7 +165,7 @@ class _RsiPageState extends State<RsiPage> {
 
 class _IndicatorItem {
   final String title;
-  final Color color;
+  final Color backgroundColor;
 
-  _IndicatorItem({required this.title, required this.color});
+  _IndicatorItem({required this.title, required this.backgroundColor});
 }
