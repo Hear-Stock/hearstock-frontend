@@ -59,13 +59,10 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-<<<<<<< HEAD
-=======
   assets:
     - assets/images/
     - assets/data/
     - assets/sf2/
->>>>>>> 864197d7e0fc4d3309d94280597de62c91f9260c
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
