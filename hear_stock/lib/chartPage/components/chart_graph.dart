@@ -57,7 +57,7 @@ class _ChartGraphState extends State<ChartGraph> {
   // 사운드폰트 로딩 함수
   Future<void> loadSoundFont() async {
     soundfontId = await midiPro.loadSoundfont(
-      path: "assets/sf2/Synthesiser.sf2",
+      path: "assets/sf2/Piano.sf2",
       bank: 0,
       program: 0,
     );
@@ -146,8 +146,8 @@ class _ChartGraphState extends State<ChartGraph> {
       final double positionRatio = (position.dx / chartWidth).clamp(0.0, 1.0);
 
       // 🎚️ velocity 비율 계산
-      final int velocityLeft = ((1 - positionRatio) * 127).round();
-      final int velocityRight = (positionRatio * 127).round();
+      final int velocityLeft = (positionRatio * 127).round();
+      final int velocityRight = ((1 - positionRatio) * 127).round();
 
       // 🔊 왼쪽 채널 재생
       midiPro.playNote(
