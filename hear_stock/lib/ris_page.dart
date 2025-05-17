@@ -21,6 +21,15 @@ class _RsiPageState extends State<RsiPage> {
     'PSR': '1.3배',
   };
 
+  final Map<String, String> indicatorSummaries = {
+    '시가총액': '시가총액은 기업의 전체 시장 가치를 나타냅니다.',
+    '배당수익률': '배당수익률은 주가 대비 배당금 비율을 의미합니다.',
+    'PBR': 'PBR은 주가순자산비율로, 주가가 순자산에 비해 얼마나 높은지를 나타냅니다.',
+    'PER': 'PER은 주가수익비율로, 기업의 수익성과 투자 매력을 나타냅니다.',
+    'ROE': 'ROE는 자기자본이익률로, 기업의 수익성을 평가하는 지표입니다.',
+    'PSR': 'PSR은 주가매출비율로, 매출 대비 주가의 수준을 보여줍니다.',
+  };
+
   final List<_IndicatorItem> items = [
     _IndicatorItem(title: '시가총액', backgroundColor: Color(0xFF4A90E2)),
     _IndicatorItem(title: '배당수익률', backgroundColor: Color(0xFFFF6B6B)),
@@ -39,6 +48,11 @@ class _RsiPageState extends State<RsiPage> {
       selectedValue = indicatorValues[title] ?? '';
     });
     await flutterTts.speak('$title, ${indicatorValues[title]}');
+  }
+
+  Future<void> _onIndicatorLongPressed(String title) async {
+    String summary = indicatorSummaries[title] ?? '$title에 대한 요약 정보입니다.';
+    await flutterTts.speak(summary);
   }
 
   @override
@@ -115,6 +129,8 @@ class _RsiPageState extends State<RsiPage> {
                                 ),
                               ),
                               onPressed: () => _onIndicatorPressed(item.title),
+                              onLongPress:
+                                  () => _onIndicatorLongPressed(item.title),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
