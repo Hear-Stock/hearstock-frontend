@@ -15,12 +15,19 @@ class LandingPage extends StatelessWidget {
               },
               child: Text('Go to Home Page'),
             ),
-            SizedBox(height: 20), // 두 버튼 사이에 여백 추가
+            SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
                 Navigator.pushNamed(context, '/chart');
               },
               child: Text('Go to Chart Page'),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/ris');
+              },
+              child: Text('Go to RIS Page'),
             ),
           ],
         ),
