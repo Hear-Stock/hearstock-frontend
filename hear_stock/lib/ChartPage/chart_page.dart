@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'components/chart_graph.dart';
+import 'components/graph/chart_graph.dart';
 import 'components/chart_timeline.dart';
 import 'components/chart_header.dart';
 
