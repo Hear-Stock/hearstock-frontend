@@ -21,7 +21,7 @@ class VoiceScrollHandler {
       onResult(result);
 
       // 음성 인식 결과를 API로 전송
-      ApiService.sendRecognizedText(result);
+      //ApiService.sendRecognizedText(result);
       // 음성이 들어왔으니 타이머 초기화 후 새로 시작
       _silenceTimer?.cancel();
       _silenceTimer = Timer(Duration(seconds: 3), () {
