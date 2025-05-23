@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'speech_recognition.dart';
+import '../utils/voice_scroll_handler.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -8,52 +8,17 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool _isMicrophoneActive = false;
-  String _recognizedText = ""; // 인식된 텍스트 저장
+  String _recognizedText = "";
 
-  final SpeechRecognition _speechRecognition =
-      SpeechRecognition(); // SpeechRecognition 객체 생성
+  final VoiceScrollHandler _voiceScrollHandler = VoiceScrollHandler();
 
-  // 음성 인식 시작 함수
-  void _startListening() {
-    setState(() {
-      _isMicrophoneActive = true; // 마이크 활성화
-    });
-
-    _speechRecognition.startListening((result) {
-      setState(() {
-        _recognizedText = result; // 인식된 텍스트 업데이트
-      });
-    });
-  }
-
-  // 음성 인식 중지 함수
-  void _stopListening() {
-    _speechRecognition.stopListening();
-    setState(() {
-      _isMicrophoneActive = false; // 마이크 비활성화
-    });
-  }
-
-  // 마이크 실행을 위한 새로 고침 함수
+  // 새로고침으로 음성 인식 실행
   Future<void> _onRefresh() async {
-    setState(() {
-      _isMicrophoneActive = true; // 마이크 활성화
-    });
-
-    // 음성 인식 시작
-    await _speechRecognition.startListening((result) {
-      setState(() {
-        _recognizedText = result; // 인식된 텍스트 업데이트
-      });
-    });
-
-    // 음성 인식 종료 후 마이크 비활성화
-    Future.delayed(Duration(seconds: 3), () {
-      // 5초 후 마이크 비활성화
-      setState(() {
-        _isMicrophoneActive = false; // 마이크 비활성화
-      });
-    });
+    _voiceScrollHandler.startListening(
+      onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),
+      onResult: (text) => setState(() => _recognizedText = text),
+      onEnd: (isActive) => setState(() => _isMicrophoneActive = isActive),
+    );
   }
 
   @override
@@ -130,9 +95,7 @@ class _HomePageState extends State<HomePage> {
                             color: Color(0xFF989898),
                           ),
                         ),
-
                         SizedBox(height: 20),
-                        // 인식된 텍스트 출력
                         Text(
                           '인식된 텍스트: $_recognizedText',
                           style: TextStyle(
