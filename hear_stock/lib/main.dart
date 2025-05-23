@@ -7,7 +7,7 @@ import 'chartPage/chart_page.dart';
 import 'ris_page.dart';
 
 void main() async {
-  await dotenv.load();
+  //await dotenv.load();
   runApp(MyApp());
 }
 
