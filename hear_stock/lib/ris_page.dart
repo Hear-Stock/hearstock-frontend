@@ -32,7 +32,7 @@ class _RsiPageState extends State<RsiPage> {
     _IndicatorItem(title: 'PSR', backgroundColor: Color(0xFFF3B6B6)),
   ];
 
-  final String apiUrl = 'http:/http://localhost:8000/docs/api/indicator/';
+  final String apiUrl = 'http://localhost:8000/api/indicator/';
 
   Future<String> fetchSummaryFromApi(String title) async {
     try {
