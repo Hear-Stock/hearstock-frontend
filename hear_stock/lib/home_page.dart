@@ -11,8 +11,24 @@ class _HomePageState extends State<HomePage> {
   String _recognizedText = "";
 
   final VoiceScrollHandler _voiceScrollHandler = VoiceScrollHandler();
+  final ScrollController _scrollController = ScrollController();
 
-  // 새로고침으로 음성 인식 실행
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(() {
+      if (_isMicrophoneActive) {
+        _stopListeningManually();
+      }
+    });
+  }
+
+  void _stopListeningManually() {
+    _voiceScrollHandler.stopImmediately(
+      (isActive) => setState(() => _isMicrophoneActive = isActive),
+    );
+  }
+
   Future<void> _onRefresh() async {
     _voiceScrollHandler.startListening(
       onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),
@@ -25,93 +41,137 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFF262626),
-      body: RefreshIndicator(
-        onRefresh: _onRefresh, // 화면을 내려서 새로 고침하면 _onRefresh 호출
-        child: ListView(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(30, 50, 30, 30),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '어떤 주식을 찾으세요?',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFFFFFFF),
-                    ),
+      body: Stack(
+        children: [
+          RefreshIndicator(
+            onRefresh: _onRefresh,
+            child: ListView(
+              controller: _scrollController,
+              physics: AlwaysScrollableScrollPhysics(),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(30, 50, 30, 30),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '어떤 주식을 찾으세요?',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        '아래로 스크롤해서 마이크를 작동시켜 물어보세요!',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 40),
+                      Center(
+                        child: Column(
+                          children: [
+                            Text(
+                              '아래로 스크롤해서 마이크를 작동시켜 물어보세요',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Image.asset(
+                              'assets/images/home-image.png',
+                              width: 200,
+                              height: 200,
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              '삼성전자 주가 알고싶어',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF989898),
+                              ),
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              '현대차 주식 보여줘',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              'SK 하이닉스 차트가 궁금해',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF989898),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    '아래로 스크롤해서 마이크를 작동시켜 물어보세요!',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFFFFFFF),
+                ),
+              ],
+            ),
+          ),
+
+          if (_isMicrophoneActive)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.9),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '음성 대화 중',
+                      style: TextStyle(color: Colors.white, fontSize: 18),
                     ),
-                  ),
-                  SizedBox(height: 40),
-                  Center(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          '아래로 스크롤해서 마이크를 작동시켜 물어보세요',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFFFFFFF),
-                          ),
-                        ),
-                        Image.asset(
-                          'assets/images/home-image.png',
-                          width: 200.0,
-                          height: 200.0,
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          '삼성전자 주가 알고싶어',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF989898),
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          '현대차 주식 보여줘',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFFFFFFF),
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          'SK 하이닉스 차트가 궁금해',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF989898),
-                          ),
-                        ),
-                        SizedBox(height: 20),
-                        Text(
-                          '인식된 텍스트: $_recognizedText',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFFFFFFF),
-                          ),
-                        ),
-                      ],
+                    SizedBox(height: 20),
+                    Icon(Icons.mic, size: 100, color: Colors.white),
+                    SizedBox(height: 20),
+                    Text(
+                      '듣고 있어요',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ],
+                    SizedBox(height: 10),
+                    Text(
+                      '인식된 텍스트: $_recognizedText',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+
+                    SizedBox(height: 40),
+                    ElevatedButton.icon(
+                      onPressed: _stopListeningManually,
+                      icon: Icon(Icons.stop, size: 32),
+                      label: Text("그만두기", style: TextStyle(fontSize: 18)),
+                      style: ElevatedButton.styleFrom(
+                        shape: CircleBorder(),
+                        padding: EdgeInsets.all(50),
+                        backgroundColor: Colors.redAccent,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
