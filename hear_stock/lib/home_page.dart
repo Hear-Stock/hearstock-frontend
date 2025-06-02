@@ -30,12 +30,21 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _onRefresh() async {
-    _voiceScrollHandler.startListening(
+    _voiceScrollHandler.simulateInput(
+      "현대차 투자지표 보여줘",
       onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),
       onResult: (text) => setState(() => _recognizedText = text),
       onEnd: (isActive) => setState(() => _isMicrophoneActive = isActive),
     );
   }
+
+  // Future<void> _onRefresh() async {
+  //   _voiceScrollHandler.startListening(
+  //     onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),
+  //     onResult: (text) => setState(() => _recognizedText = text),
+  //     onEnd: (isActive) => setState(() => _isMicrophoneActive = isActive),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
