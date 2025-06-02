@@ -1,27 +1,26 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class RsiPage extends StatefulWidget {
+  const RsiPage({Key? key}) : super(key: key);
+
   @override
   _RsiPageState createState() => _RsiPageState();
 }
 
 class _RsiPageState extends State<RsiPage> {
-  final FlutterTts flutterTts = FlutterTts();
-
-  String selectedTitle = '';
-  String selectedValue = '';
-
-  final Map<String, String> indicatorValues = {
+  Map<String, String> indicatorValues = {
     '시가총액': '',
     '배당수익률': '',
     'PBR': '',
     'PER': '',
     'ROE': '',
     'PSR': '',
+    '외국인 소진율': '',
   };
+
+  String selectedTitle = '시가총액';
 
   final List<_IndicatorItem> items = [
     _IndicatorItem(title: '시가총액', backgroundColor: Color(0xFF4A90E2)),
@@ -30,46 +29,79 @@ class _RsiPageState extends State<RsiPage> {
     _IndicatorItem(title: 'PER', backgroundColor: Color(0xFFFFC107)),
     _IndicatorItem(title: 'ROE', backgroundColor: Color(0xFFAF7AC5)),
     _IndicatorItem(title: 'PSR', backgroundColor: Color(0xFFF3B6B6)),
+    _IndicatorItem(title: '외국인 소진율', backgroundColor: Color(0xFF80DEEA)),
   ];
 
-  final String apiUrl = 'http://localhost:8000/api/indicator/';
+  @override
+  void initState() {
+    super.initState();
+    fetchIndicatorValues(code: '005930', market: 'KR');
+  }
 
-  Future<String> fetchSummaryFromApi(String title) async {
+  Future<void> fetchIndicatorValues({
+    required String code,
+    required String market,
+  }) async {
+    final queryParameters = {'code': code, 'market': market};
+    final uri = Uri.http(
+      '39.126.141.8:8000',
+      '/api/indicator/',
+      queryParameters,
+    );
+
     try {
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'indicator_name': title}),
-      );
+      final response = await http.get(uri);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['summary'] ?? '$title에 대한 요약 정보가 없습니다.';
+
+        setState(() {
+          indicatorValues['시가총액'] = _formatValue(data['market_cap'], unit: '원');
+          indicatorValues['배당수익률'] = '${data['dividend_yield']}%';
+          indicatorValues['PBR'] = '${data['pbr']}배';
+          indicatorValues['PER'] = '${data['per']}배';
+          indicatorValues['ROE'] = '${data['roe']}%';
+          indicatorValues['PSR'] = '${data['psr']}배';
+
+          if (data.containsKey('foreign_ownership')) {
+            indicatorValues['외국인 소진율'] = '${data['foreign_ownership']}%';
+          } else {
+            indicatorValues['외국인 소진율'] = 'N/A';
+          }
+
+          // 초기 선택값 지정
+          selectedTitle = '시가총액';
+        });
       } else {
-        return '$title 정보를 불러오는 데 실패했습니다. (${response.statusCode})';
+        setState(() {
+          indicatorValues.updateAll((key, value) => '불러오기 실패');
+        });
       }
     } catch (e) {
-      return '요약 정보를 가져오는 중 오류가 발생했습니다.';
+      setState(() {
+        indicatorValues.updateAll((key, value) => '에러 발생');
+      });
     }
   }
 
-  Future<void> _onIndicatorPressed(String title) async {
+  String _formatValue(dynamic raw, {String unit = ''}) {
+    if (raw == null) return '-';
+    try {
+      final numValue = double.parse(raw.toString());
+      if (numValue >= 1e12)
+        return '${(numValue / 1e12).toStringAsFixed(1)}조$unit';
+      if (numValue >= 1e8)
+        return '${(numValue / 1e8).toStringAsFixed(1)}억$unit';
+      return '$numValue$unit';
+    } catch (_) {
+      return '$raw$unit';
+    }
+  }
+
+  void _onIndicatorPressed(String title) {
     setState(() {
       selectedTitle = title;
-      selectedValue = indicatorValues[title] ?? '';
     });
-    await flutterTts.speak('$title, ${indicatorValues[title] ?? ""}');
-  }
-
-  Future<void> _onIndicatorLongPressed(String title) async {
-    String summary = await fetchSummaryFromApi(title);
-    await flutterTts.speak(summary);
-  }
-
-  @override
-  void dispose() {
-    flutterTts.stop();
-    super.dispose();
   }
 
   @override
@@ -78,98 +110,99 @@ class _RsiPageState extends State<RsiPage> {
 
     return Scaffold(
       backgroundColor: Color(0xff262626),
+      appBar: AppBar(title: const Text('투자지표')),
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(30, 60, 30, 30),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Semantics(
-              header: true,
-              child: Text(
-                selectedTitle.isNotEmpty ? selectedTitle : '지표를 선택하세요',
-                style: TextStyle(
-                  fontSize: 22 * textScale,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+            Text(
+              selectedTitle,
+              style: TextStyle(
+                fontSize: 22 * textScale,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
+            SizedBox(height: 8),
             Text(
-              selectedValue,
+              indicatorValues[selectedTitle] ?? '-',
               style: TextStyle(
                 fontSize: 34 * textScale,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
-            SizedBox(height: 30),
+            SizedBox(height: 24),
             Expanded(
-              child: FocusTraversalGroup(
-                policy: ReadingOrderTraversalPolicy(),
-                child: GridView(
-                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 200,
-                    crossAxisSpacing: 20,
-                    mainAxisSpacing: 20,
-                    childAspectRatio: 1.2,
-                  ),
-                  children:
-                      items.map((item) {
-                        final isSelected = item.title == selectedTitle;
-
-                        return Semantics(
-                          label:
-                              '${item.title} 버튼' + (isSelected ? ', 선택됨' : ''),
-                          button: true,
-                          selected: isSelected,
-                          child: Tooltip(
-                            message: '${item.title} 선택',
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: item.backgroundColor,
-                                foregroundColor: Color(0xff262626),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  side: BorderSide(
-                                    color:
-                                        isSelected
-                                            ? Colors.white
-                                            : Colors.transparent,
-                                    width: 3,
+              child: GridView(
+                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 200,
+                  crossAxisSpacing: 20,
+                  mainAxisSpacing: 20,
+                  childAspectRatio: 1.2,
+                ),
+                children:
+                    items
+                        .where(
+                          (item) => indicatorValues.containsKey(item.title),
+                        )
+                        .map((item) {
+                          final isSelected = item.title == selectedTitle;
+                          return Semantics(
+                            label:
+                                '${item.title} 버튼${isSelected ? ', 선택됨' : ''}',
+                            button: true,
+                            selected: isSelected,
+                            child: Tooltip(
+                              message: '${item.title} 선택',
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: item.backgroundColor,
+                                  foregroundColor: Color(0xff262626),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    side: BorderSide(
+                                      color:
+                                          isSelected
+                                              ? Colors.white
+                                              : Colors.transparent,
+                                      width: 3,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              onPressed: () => _onIndicatorPressed(item.title),
-                              onLongPress:
-                                  () => _onIndicatorLongPressed(item.title),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    item.title,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 22 * textScale,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                  if (isSelected)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 8.0),
-                                      child: Icon(
-                                        Icons.check_circle,
-                                        size: 20 * textScale,
-                                        color: Colors.white,
-                                        semanticLabel: '선택됨',
+                                onPressed:
+                                    () => _onIndicatorPressed(item.title),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      item.title,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 22 * textScale,
+                                        fontWeight: FontWeight.w900,
                                       ),
                                     ),
-                                ],
+                                    if (isSelected)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          top: 8.0,
+                                        ),
+                                        child: Icon(
+                                          Icons.check_circle,
+                                          size: 20 * textScale,
+                                          color: Colors.white,
+                                          semanticLabel: '선택됨',
+                                        ),
+                                      ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      }).toList(),
-                ),
+                          );
+                        })
+                        .toList(),
               ),
             ),
             SizedBox(height: 10),
