@@ -25,13 +25,15 @@ class _HomePageState extends State<HomePage> {
 
   void _stopListeningManually() {
     _voiceScrollHandler.stopImmediately(
+      context,
       (isActive) => setState(() => _isMicrophoneActive = isActive),
     );
   }
 
   Future<void> _onRefresh() async {
     _voiceScrollHandler.simulateInput(
-      "현대차 투자지표 보여줘",
+      "삼성전자 주식차트 1년치 알려줘",
+      context,
       onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),
       onResult: (text) => setState(() => _recognizedText = text),
       onEnd: (isActive) => setState(() => _isMicrophoneActive = isActive),
