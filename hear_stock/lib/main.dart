@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => LandingPage(),
         '/home': (context) => HomePage(),
         '/chart': (context) => ChartPage(),
-        '/ris': (context) => RsiPage(),
+        '/rsi': (context) => RsiPage(),
       },
     );
   }
