@@ -1,9 +1,10 @@
-// lib/chart_sonification.dart
+// lib/chart_sonification_soloud.dart
 
 import 'dart:ui';
-import 'package:flutter_midi_pro/flutter_midi_pro.dart';
+import 'package:flutter_soloud/flutter_soloud.dart';
+import 'package:logging/logging.dart';
 
-/// 차트 데이터 모델
+/// 차트 데이터 모델 (기존과 동일)
 class ChartData {
   final DateTime date;
   final double price;
@@ -11,26 +12,19 @@ class ChartData {
   ChartData({required this.date, required this.price});
 }
 
-/// 차트 음향화 서비스
-/// - 차트 데이터를 받아 MIDI 사운드로 재생하는 로직을 라이브러리 형태로 분리
+/// ChartSonificationService (SoLoud 사용 버전)
 class ChartSonificationService {
   final List<ChartData> data;
-  final MidiPro _midiPro;
-  final int minKey;
-  final int maxKey;
-  int? _soundfontId;
+  final SoLoud _soloud = SoLoud.instance; // SoLoud 싱글톤 인스턴스
+  final Map<int, SoundHandle> _playingHandles = {}; // 현재 재생 중인 핸들 저장
 
   late double _minPrice, _maxPrice;
 
-  ChartSonificationService({
-    required this.data,
-    MidiPro? midiPro,
-    this.minKey = 40,
-    this.maxKey = 80,
-  }) : _midiPro = midiPro ?? MidiPro() {
+  ChartSonificationService({required this.data}) {
     _initPriceBounds();
   }
 
+  /// 가격의 최솟값/최댓값 계산
   void _initPriceBounds() {
     if (data.isEmpty) {
       _minPrice = 0;
@@ -41,80 +35,102 @@ class ChartSonificationService {
     }
   }
 
-  /// SoundFont 파일 로딩
-  Future<void> loadSoundFont(
-    String path, {
-    int bank = 0,
-    int program = 0,
-  }) async {
-    _soundfontId = await _midiPro.loadSoundfont(
-      path: path,
-      bank: bank,
-      program: program,
-    );
-    if (_soundfontId != null) {
-      // 채널 0,1에 동일 악기 설정
-      await _midiPro.selectInstrument(
-        sfId: _soundfontId!,
-        channel: 0,
-        bank: bank,
-        program: program,
-      );
-      await _midiPro.selectInstrument(
-        sfId: _soundfontId!,
-        channel: 1,
-        bank: bank,
-        program: program,
-      );
-    }
+  /// SoLoud 엔진 초기화
+  Future<void> initialize() async {
+    // 이미 초기화되었다면 중복 호출 방지
+    if (_soloud.isInitialized) return;
+
+    // 로깅 레벨 설정 (필요에 따라 조정)
+    Logger.root.level = Level.INFO;
+    Logger.root.onRecord.listen((record) {
+      // Flutter 로깅 시스템에 기록
+      // (코드 내에선 생략)
+    });
+
+    await _soloud.init(); // SoLoud 엔진 시작 :contentReference[oaicite:1]{index=1}
   }
 
-  /// 주어진 화면 X 위치에 해당하는 데이터를 MIDI로 재생하고, 날짜와 가격 문자열 반환
-  String playNoteAtPosition(
-    Offset position,
-    double chartWidth, {
-    int channelLeft = 0,
-    int channelRight = 1,
-    int durationMillis = 150,
-  }) {
-    if (data.isEmpty || _soundfontId == null) return '';
+  /// SoLoud 엔진 종료 및 리소스 해제
+  void dispose() {
+    // 재생 중인 모든 소리 중단
+    for (var handle in _playingHandles.values) {
+      _soloud.stop(handle);
+    }
+    _playingHandles.clear();
 
+    // 엔진 해제
+    _soloud.deinit();
+  }
+
+  /// 주어진 화면 X 위치에 해당하는 데이터를 이용해 3D 위치에서 Beep 재생
+  ///
+  /// [position]: 터치하거나 커서 위치 등 차트상의 좌표 (Offset(dx, dy))
+  /// [chartWidth]: 차트의 가로 길이 (px)
+  /// [chartHeight]: 차트의 세로 길이 (px)
+  /// [durationMillis]: 소리 길이 (기본 150ms)
+  Future<String> playBeepAtPosition(
+    Offset position,
+    double chartWidth,
+    double chartHeight, {
+    int durationMillis = 150,
+  }) async {
+    if (data.isEmpty || !_soloud.isInitialized) return '';
+
+    // 1) 화면 X 위치 → 데이터 인덱스 매핑
     final int index = ((position.dx / (chartWidth / (data.length - 1))).round())
         .clamp(0, data.length - 1);
     final ChartData point = data[index];
 
-    final int key = _mapPriceToKey(point.price);
-    final double ratio = (position.dx / chartWidth).clamp(0.0, 1.0);
+    // 2) 가격 → 주파수 매핑 (예: 220Hz ~ 880Hz 구간)
+    final double frequency = _mapPriceToFrequency(point.price);
 
-    final int velL = (ratio * 127).round();
-    final int velR = ((1 - ratio) * 127).round();
+    // 3) Waveform(사인파) 소스 생성
+    final AudioSource source = await SoLoudTools.createWaveform(
+      wave: WaveForm.sin,
+      frequency: frequency,
+      volume: 1.0,
+    ); // :contentReference[oaicite:2]{index=2}
 
-    _midiPro.playNote(
-      sfId: _soundfontId!,
-      channel: channelLeft,
-      key: key,
-      velocity: velL,
-    );
-    _midiPro.playNote(
-      sfId: _soundfontId!,
-      channel: channelRight,
-      key: key,
-      velocity: velR,
-    );
+    // 4) 3D 좌표 계산
+    //    - X축: 전체 차트 넓이를 -1.0 ~ 1.0 범위로 정규화
+    //    - Y축: 0으로 고정하거나 필요 시 사용
+    //    - Z축: 화면 Y 위치를 -1.0 ~ 1.0 범위로 정규화 (아래로 갈수록 + 쪽)
+    final double normX = (position.dx / chartWidth) * 2 - 1; // [-1.0, 1.0]
+    final double normY = 0.0; // 고정
+    final double normZ = (position.dy / chartHeight) * 2 - 1; // [-1.0, 1.0]
 
-    Future.delayed(Duration(milliseconds: durationMillis), () {
-      _midiPro.stopNote(sfId: _soundfontId!, channel: channelLeft, key: key);
-      _midiPro.stopNote(sfId: _soundfontId!, channel: channelRight, key: key);
+    // 5) 소리 재생 (3D)
+    final SoundHandle handle = await _soloud.play3d(
+      source,
+      normX,
+      normY,
+      normZ,
+      // 1.0, // 초기 볼륨 (0.0 ~ 1.0)
+    ); // :contentReference[oaicite:3]{index=3}
+    // 재생 핸들 보관
+    _playingHandles[index] = handle;
+
+    // 6) durationMillis 후에 소리 중단 및 소스 해제
+    Future.delayed(Duration(milliseconds: durationMillis), () async {
+      _soloud.stop(handle);
+      _soloud.disposeSource(source); // 자원 해제
+      _playingHandles.remove(index);
     });
 
+    // 7) 재생된 데이터 정보 반환 (예: 날짜, 가격)
     final String dateStr =
         point.date.toLocal().toIso8601String().split('T').first;
     return '$dateStr: \$${point.price.toString()}';
   }
 
-  int _mapPriceToKey(double price) {
+  /// 가격 → 주파수 매핑 유틸리티
+  ///
+  /// 예를 들어, _minPrice → 220Hz, _maxPrice → 880Hz 로 변환
+  double _mapPriceToFrequency(double price) {
     final double normalized = ((price - _minPrice) / (_maxPrice - _minPrice))
         .clamp(0.0, 1.0);
-    return (minKey + (normalized * (maxKey - minKey))).round();
+    const double minFreq = 220.0;
+    const double maxFreq = 880.0;
+    return minFreq + (normalized * (maxFreq - minFreq));
   }
 }
