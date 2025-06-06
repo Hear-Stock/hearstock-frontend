@@ -1,6 +1,7 @@
 // lib/chart_painter.dart
 import 'package:flutter/material.dart';
 import 'chart_sonification.dart'; // ChartData를 쓰기 위해
+import 'chart_data.dart';
 
 class ChartPainter extends CustomPainter {
   final List<ChartData> data;

@@ -1,8 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+
+import 'chart_data.dart';
 import 'chart_sonification.dart';
 import 'chart_painter.dart';
+import '../../../ffi/soloud_ffi.dart';
 
 class ChartGraph extends StatefulWidget {
   final String timeline;
@@ -17,12 +20,11 @@ class _ChartGraphState extends State<ChartGraph> {
   String selectedPrice = "";
   List<ChartData> data = [];
 
-  late ChartSonificationService _sonifier;
-
   @override
   void initState() {
     super.initState();
     loadData();
+    initSoloud(); // C++ SoLoud 초기화
   }
 
   Future<void> loadData() async {
@@ -38,11 +40,24 @@ class _ChartGraphState extends State<ChartGraph> {
             )
             .toList();
 
-    // 서비스 초기화 & SoundFont 로드
-    _sonifier = ChartSonificationService(data: data);
-    await _sonifier.loadSoundFont('assets/sf2/Piano.sf2');
+    setState(() {});
+  }
 
-    setState(() {}); // 데이터 & 서비스 준비 완료
+  String playSoundFromPosition(Offset position, double chartWidth) {
+    final index =
+        (position.dx / chartWidth * data.length)
+            .clamp(0, data.length - 1)
+            .toInt();
+    final point = data[index];
+    final price = point.price;
+
+    final x = (position.dx / chartWidth - 0.5) * 2;
+    final y = (1 - (position.dy / 250.0)) * 2 - 1;
+    final z = (price % 10) / 5.0 - 1.0;
+
+    play3d(x, y, z); // FFI 호출
+
+    return '${point.date.month}/${point.date.day}: ₩${price.toStringAsFixed(0)}';
   }
 
   @override
@@ -61,14 +76,14 @@ class _ChartGraphState extends State<ChartGraph> {
                   final chartWidth = constraints.maxWidth;
                   return GestureDetector(
                     onPanUpdate: (details) {
-                      final label = _sonifier.playNoteAtPosition(
+                      final label = playSoundFromPosition(
                         details.localPosition,
-                        chartWidth, // ← 실제 박스 너비
+                        chartWidth,
                       );
                       setState(() => selectedPrice = label);
                     },
                     onTapUp: (details) {
-                      final label = _sonifier.playNoteAtPosition(
+                      final label = playSoundFromPosition(
                         details.localPosition,
                         chartWidth,
                       );
@@ -82,5 +97,11 @@ class _ChartGraphState extends State<ChartGraph> {
                 },
               ),
     );
+  }
+
+  @override
+  void dispose() {
+    stopSoloud();
+    super.dispose();
   }
 }
