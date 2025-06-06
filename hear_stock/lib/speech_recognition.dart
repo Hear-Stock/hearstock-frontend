@@ -20,6 +20,10 @@ class SpeechRecognition {
 
   // 음성 인식 중지 함수
   void stopListening() {
-    _speech.stop();
+    if (_speech.isListening) {
+      _speech.stop();
+    } else {
+      print('⚠️ 이미 음성 인식이 중지된 상태입니다.');
+    }
   }
 }

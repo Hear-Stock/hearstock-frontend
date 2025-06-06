@@ -7,7 +7,10 @@ import 'chartPage/chart_page.dart';
 import 'ris_page.dart';
 
 void main() async {
-  await dotenv.load();
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
+
+  print(dotenv.env['API_BASE_URL']);
   runApp(MyApp());
 }
 
@@ -23,7 +26,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => LandingPage(),
         '/home': (context) => HomePage(),
         '/chart': (context) => ChartPage(),
-        '/ris': (context) => RsiPage(),
+        '/rsi': (context) => RsiPage(),
       },
     );
   }
