@@ -55,7 +55,7 @@ class ApiService {
       if (intent == 'chart') {
         Navigator.pushNamed(context, '/chart');
       } else if (intent == 'indicator') {
-        Navigator.pushNamed(context, '/ris');
+        Navigator.pushNamed(context, '/rsi');
       } else {
         print('알 수 없는 intent: $intent');
       }
