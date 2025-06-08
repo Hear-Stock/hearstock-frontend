@@ -11,16 +11,17 @@ class RsiPage extends StatefulWidget {
 class _RsiPageState extends State<RsiPage> {
   final FlutterTts flutterTts = FlutterTts();
 
-  String selectedTitle = '';
+  String selectedTitle = '시가총액';
   String selectedValue = '';
 
-  final Map<String, String> indicatorValues = {
+  Map<String, String> indicatorValues = {
     '시가총액': '',
     '배당수익률': '',
     'PBR': '',
     'PER': '',
     'ROE': '',
     'PSR': '',
+    '외국인 소진율': '',
   };
 
   final List<_IndicatorItem> items = [
@@ -30,23 +31,79 @@ class _RsiPageState extends State<RsiPage> {
     _IndicatorItem(title: 'PER', backgroundColor: Color(0xFFFFC107)),
     _IndicatorItem(title: 'ROE', backgroundColor: Color(0xFFAF7AC5)),
     _IndicatorItem(title: 'PSR', backgroundColor: Color(0xFFF3B6B6)),
+    _IndicatorItem(title: '외국인 소진율', backgroundColor: Color(0xFF80DEEA)),
   ];
 
-  final String apiUrl = 'http://localhost:8000/api/indicator/';
+  @override
+  void initState() {
+    super.initState();
+    fetchIndicatorValues(code: '005930', market: 'KR'); // 예: 삼성전자
+  }
+
+  Future<void> fetchIndicatorValues({
+    required String code,
+    required String market,
+  }) async {
+    final uri = Uri.http('39.126.141.10:8000', '/api/indicator/', {
+      'code': code,
+      'market': market,
+    });
+
+    try {
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        setState(() {
+          indicatorValues = {
+            '시가총액': _formatValue(data['market_cap'], unit: '원'),
+            '배당수익률': '${data['dividend_yield']}%',
+            'PBR': '${data['pbr']}배',
+            'PER': '${data['per']}배',
+            'ROE': '${data['roe']}%',
+            'PSR': '${data['psr']}배',
+            if (data.containsKey('foreign_ownership'))
+              '외국인 소진율': '${data['foreign_ownership']}%',
+          };
+          selectedValue = indicatorValues[selectedTitle] ?? '';
+        });
+      } else {
+        setState(() {
+          indicatorValues.updateAll((key, value) => '불러오기 실패');
+        });
+      }
+    } catch (e) {
+      setState(() {
+        indicatorValues.updateAll((key, value) => '에러 발생');
+      });
+    }
+  }
+
+  String _formatValue(dynamic value, {String unit = ''}) {
+    if (value == null) return 'N/A';
+    double numValue = double.tryParse(value.toString()) ?? 0;
+    if (numValue >= 1e12) {
+      return '${(numValue / 1e12).toStringAsFixed(1)}조$unit';
+    } else if (numValue >= 1e8) {
+      return '${(numValue / 1e8).toStringAsFixed(1)}억$unit';
+    } else if (numValue >= 1e4) {
+      return '${(numValue / 1e4).toStringAsFixed(1)}만$unit';
+    } else {
+      return '${numValue.toStringAsFixed(0)}$unit';
+    }
+  }
 
   Future<String> fetchSummaryFromApi(String title) async {
+    final uri = Uri.http('39.126.141.10:8000', '/api/summary/', {
+      'title': title,
+    });
     try {
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'indicator_name': title}),
-      );
-
+      final response = await http.get(uri);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['summary'] ?? '$title에 대한 요약 정보가 없습니다.';
       } else {
-        return '$title 정보를 불러오는 데 실패했습니다. (${response.statusCode})';
+        return '$title 정보를 불러오는 데 실패했습니다.';
       }
     } catch (e) {
       return '요약 정보를 가져오는 중 오류가 발생했습니다.';
@@ -58,7 +115,7 @@ class _RsiPageState extends State<RsiPage> {
       selectedTitle = title;
       selectedValue = indicatorValues[title] ?? '';
     });
-    await flutterTts.speak('$title, ${indicatorValues[title] ?? ""}');
+    await flutterTts.speak('$title, ${indicatorValues[title]}');
   }
 
   Future<void> _onIndicatorLongPressed(String title) async {
@@ -86,7 +143,7 @@ class _RsiPageState extends State<RsiPage> {
             Semantics(
               header: true,
               child: Text(
-                selectedTitle.isNotEmpty ? selectedTitle : '지표를 선택하세요',
+                selectedTitle,
                 style: TextStyle(
                   fontSize: 22 * textScale,
                   fontWeight: FontWeight.bold,
@@ -114,61 +171,69 @@ class _RsiPageState extends State<RsiPage> {
                     childAspectRatio: 1.2,
                   ),
                   children:
-                      items.map((item) {
-                        final isSelected = item.title == selectedTitle;
+                      items
+                          .where(
+                            (item) => indicatorValues.containsKey(item.title),
+                          )
+                          .map((item) {
+                            final isSelected = item.title == selectedTitle;
 
-                        return Semantics(
-                          label:
-                              '${item.title} 버튼' + (isSelected ? ', 선택됨' : ''),
-                          button: true,
-                          selected: isSelected,
-                          child: Tooltip(
-                            message: '${item.title} 선택',
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: item.backgroundColor,
-                                foregroundColor: Color(0xff262626),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  side: BorderSide(
-                                    color:
-                                        isSelected
-                                            ? Colors.white
-                                            : Colors.transparent,
-                                    width: 3,
+                            return Semantics(
+                              label:
+                                  '${item.title} 버튼${isSelected ? ', 선택됨' : ''}',
+                              button: true,
+                              selected: isSelected,
+                              child: Tooltip(
+                                message: '${item.title} 선택',
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: item.backgroundColor,
+                                    foregroundColor: Color(0xff262626),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      side: BorderSide(
+                                        color:
+                                            isSelected
+                                                ? Colors.white
+                                                : Colors.transparent,
+                                        width: 3,
+                                      ),
+                                    ),
+                                  ),
+                                  onPressed:
+                                      () => _onIndicatorPressed(item.title),
+                                  onLongPress:
+                                      () => _onIndicatorLongPressed(item.title),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        item.title,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 22 * textScale,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                      if (isSelected)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 8.0,
+                                          ),
+                                          child: Icon(
+                                            Icons.check_circle,
+                                            size: 20 * textScale,
+                                            color: Colors.white,
+                                            semanticLabel: '선택됨',
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
                               ),
-                              onPressed: () => _onIndicatorPressed(item.title),
-                              onLongPress:
-                                  () => _onIndicatorLongPressed(item.title),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    item.title,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 22 * textScale,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                  if (isSelected)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 8.0),
-                                      child: Icon(
-                                        Icons.check_circle,
-                                        size: 20 * textScale,
-                                        color: Colors.white,
-                                        semanticLabel: '선택됨',
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                            );
+                          })
+                          .toList(),
                 ),
               ),
             ),
