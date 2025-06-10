@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_soloud/flutter_soloud.dart';
+
 import 'chart_sonification.dart';
 import 'chart_painter.dart';
 
@@ -28,21 +30,25 @@ class _ChartGraphState extends State<ChartGraph> {
   Future<void> loadData() async {
     final raw = await rootBundle.loadString('assets/data/chart_data.json');
     final List<dynamic> list = json.decode(raw);
+
     data =
-        list
-            .map(
-              (e) => ChartData(
-                date: DateTime.parse(e['date']),
-                price: e['price'].toDouble(),
-              ),
-            )
-            .toList();
+        list.map((e) {
+          return ChartData(
+            date: DateTime.parse(e['date']),
+            price: e['price'].toDouble(),
+          );
+        }).toList();
 
-    // 서비스 초기화 & SoundFont 로드
     _sonifier = ChartSonificationService(data: data);
-    await _sonifier.loadSoundFont('assets/sf2/Piano.sf2');
+    await _sonifier.init();
 
-    setState(() {}); // 데이터 & 서비스 준비 완료
+    setState(() {}); // 데이터 로딩 및 초기화 완료
+  }
+
+  @override
+  void dispose() {
+    _sonifier.dispose();
+    super.dispose();
   }
 
   @override
@@ -59,24 +65,26 @@ class _ChartGraphState extends State<ChartGraph> {
               : LayoutBuilder(
                 builder: (context, constraints) {
                   final chartWidth = constraints.maxWidth;
+                  final chartHeight = constraints.maxHeight;
+
                   return GestureDetector(
-                    onPanUpdate: (details) {
-                      final label = _sonifier.playNoteAtPosition(
+                    onPanUpdate: (details) async {
+                      final label = await _sonifier.play3DSoundAt(
                         details.localPosition,
-                        chartWidth, // ← 실제 박스 너비
+                        Size(chartWidth, chartHeight),
                       );
                       setState(() => selectedPrice = label);
                     },
-                    onTapUp: (details) {
-                      final label = _sonifier.playNoteAtPosition(
+                    onTapUp: (details) async {
+                      final label = await _sonifier.play3DSoundAt(
                         details.localPosition,
-                        chartWidth,
+                        Size(chartWidth, chartHeight),
                       );
                       setState(() => selectedPrice = label);
                     },
                     child: CustomPaint(
                       painter: ChartPainter(data: data),
-                      size: Size(chartWidth, constraints.maxHeight),
+                      size: Size(chartWidth, chartHeight),
                     ),
                   );
                 },
