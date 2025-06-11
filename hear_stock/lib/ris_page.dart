@@ -23,22 +23,13 @@ class _RsiPageState extends State<RsiPage> {
   String _recognizedText = "";
 
   Future<void> _onRefresh() async {
-    _voiceScrollHandler.simulateInput(
-      "삼성전자 주식차트 1년치 알려줘",
+    _voiceScrollHandler.startListening(
       context,
       onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),
       onResult: (text) => setState(() => _recognizedText = text),
       onEnd: (isActive) => setState(() => _isMicrophoneActive = isActive),
     );
   }
-
-  // Future<void> _onRefresh() async {
-  //   _voiceScrollHandler.startListening(
-  //     onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),
-  //     onResult: (text) => setState(() => _recognizedText = text),
-  //     onEnd: (isActive) => setState(() => _isMicrophoneActive = isActive),
-  //   );
-  // }
 
   Map<String, String> indicatorValues = {
     '시가총액': '',
