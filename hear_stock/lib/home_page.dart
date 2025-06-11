@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import 'services/voice_scroll_handler.dart';
+import 'widgets/mic_overlay.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -25,17 +27,28 @@ class _HomePageState extends State<HomePage> {
 
   void _stopListeningManually() {
     _voiceScrollHandler.stopImmediately(
+      context,
       (isActive) => setState(() => _isMicrophoneActive = isActive),
     );
   }
 
   Future<void> _onRefresh() async {
-    _voiceScrollHandler.startListening(
+    _voiceScrollHandler.simulateInput(
+      "삼성전자 주식차트 1년치 알려줘",
+      context,
       onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),
       onResult: (text) => setState(() => _recognizedText = text),
       onEnd: (isActive) => setState(() => _isMicrophoneActive = isActive),
     );
   }
+
+  // Future<void> _onRefresh() async {
+  //   _voiceScrollHandler.startListening(
+  //     onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),
+  //     onResult: (text) => setState(() => _recognizedText = text),
+  //     onEnd: (isActive) => setState(() => _isMicrophoneActive = isActive),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -125,51 +138,9 @@ class _HomePageState extends State<HomePage> {
           ),
 
           if (_isMicrophoneActive)
-            Positioned.fill(
-              child: Container(
-                color: Colors.black.withOpacity(0.9),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      '음성 대화 중',
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                    SizedBox(height: 20),
-                    Icon(Icons.mic, size: 100, color: Colors.white),
-                    SizedBox(height: 20),
-                    Text(
-                      '듣고 있어요',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      '인식된 텍스트: $_recognizedText',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-
-                    SizedBox(height: 40),
-                    ElevatedButton.icon(
-                      onPressed: _stopListeningManually,
-                      icon: Icon(Icons.stop, size: 32),
-                      label: Text("그만두기", style: TextStyle(fontSize: 18)),
-                      style: ElevatedButton.styleFrom(
-                        shape: CircleBorder(),
-                        padding: EdgeInsets.all(50),
-                        backgroundColor: Colors.redAccent,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            MicOverlay(
+              recognizedText: _recognizedText,
+              onStop: _stopListeningManually,
             ),
         ],
       ),
