@@ -6,8 +6,9 @@ import 'home_page.dart';
 import 'chartPage/chart_page.dart';
 import 'ris_page.dart';
 
-void main() async {
-  //await dotenv.load();
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   runApp(MyApp());
 }
 

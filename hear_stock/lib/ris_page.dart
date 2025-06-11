@@ -93,9 +93,9 @@ class _RsiPageState extends State<RsiPage> {
   }
 
   Future<String> fetchSummaryFromApi(String title) async {
-    final uri = Uri.http('39.126.141.10:8000', '/api/summary/', {
-      'title': title,
-    });
+    final baseUrl = dotenv.env['API_BASE_URL']!;
+    final uri = Uri.parse('${baseUrl}api/summary/?title=$title');
+
     try {
       final response = await http.get(uri);
       if (response.statusCode == 200) {
