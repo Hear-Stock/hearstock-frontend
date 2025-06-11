@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class RsiPage extends StatefulWidget {
   @override
@@ -44,10 +45,8 @@ class _RsiPageState extends State<RsiPage> {
     required String code,
     required String market,
   }) async {
-    final uri = Uri.http('39.126.141.10:8000', '/api/indicator/', {
-      'code': code,
-      'market': market,
-    });
+    final baseUrl = dotenv.env['API_BASE_URL'];
+    final uri = Uri.parse('$baseUrl/api/indicator/?code=$code&market=$market');
 
     try {
       final response = await http.get(uri);
