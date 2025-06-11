@@ -25,7 +25,7 @@ class LandingPage extends StatelessWidget {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                Navigator.pushNamed(context, '/ris');
+                Navigator.pushNamed(context, '/rsi');
               },
               child: Text('Go to RIS Page'),
             ),
