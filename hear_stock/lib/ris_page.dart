@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'services/voice_scroll_handler.dart';
 import 'widgets/mic_overlay.dart';
@@ -24,22 +23,13 @@ class _RsiPageState extends State<RsiPage> {
   String _recognizedText = "";
 
   Future<void> _onRefresh() async {
-    _voiceScrollHandler.simulateInput(
-      "삼성전자 주식차트 1년치 알려줘",
+    _voiceScrollHandler.startListening(
       context,
       onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),
       onResult: (text) => setState(() => _recognizedText = text),
       onEnd: (isActive) => setState(() => _isMicrophoneActive = isActive),
     );
   }
-
-  // Future<void> _onRefresh() async {
-  //   _voiceScrollHandler.startListening(
-  //     onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),
-  //     onResult: (text) => setState(() => _recognizedText = text),
-  //     onEnd: (isActive) => setState(() => _isMicrophoneActive = isActive),
-  //   );
-  // }
 
   Map<String, String> indicatorValues = {
     '시가총액': '',
@@ -71,8 +61,10 @@ class _RsiPageState extends State<RsiPage> {
     required String code,
     required String market,
   }) async {
-    final baseUrl = dotenv.env['API_BASE_URL'];
-    final uri = Uri.parse('$baseUrl/api/indicator/?code=$code&market=$market');
+    final uri = Uri.http('39.126.141.10:8000', '/api/indicator/', {
+      'code': code,
+      'market': market,
+    });
 
     try {
       final response = await http.get(uri);
@@ -119,9 +111,9 @@ class _RsiPageState extends State<RsiPage> {
   }
 
   Future<String> fetchSummaryFromApi(String title) async {
-    final baseUrl = dotenv.env['API_BASE_URL']!;
-    final uri = Uri.parse('${baseUrl}api/summary/?title=$title');
-
+    final uri = Uri.http('39.126.141.10:8000', '/api/summary/', {
+      'title': title,
+    });
     try {
       final response = await http.get(uri);
       if (response.statusCode == 200) {

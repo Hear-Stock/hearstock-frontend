@@ -21,22 +21,13 @@ class _ChartPageState extends State<ChartPage> {
   String _recognizedText = "";
 
   Future<void> _onRefresh() async {
-    _voiceScrollHandler.simulateInput(
-      "삼성전자 투자지표 알려줘",
+    _voiceScrollHandler.startListening(
       context,
       onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),
       onResult: (text) => setState(() => _recognizedText = text),
       onEnd: (isActive) => setState(() => _isMicrophoneActive = isActive),
     );
   }
-
-  // Future<void> _onRefresh() async {
-  //   _voiceScrollHandler.startListening(
-  //     onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),
-  //     onResult: (text) => setState(() => _recognizedText = text),
-  //     onEnd: (isActive) => setState(() => _isMicrophoneActive = isActive),
-  //   );
-  // }
 
   // 음성 인식 중단
   void _stopListeningManually() {

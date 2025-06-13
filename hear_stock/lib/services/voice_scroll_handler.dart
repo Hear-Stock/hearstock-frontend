@@ -12,25 +12,6 @@ class VoiceScrollHandler {
   Timer? _silenceTimer;
   String _finalText = '';
 
-  // 에뮬레이터용 : text로 음성인식 테스트
-  void simulateInput(
-    String text,
-    BuildContext context, {
-    required OnSTTStatusChange onStart,
-    required OnSTTResult onResult,
-    required OnSTTStatusChange onEnd,
-  }) async {
-    onStart(true);
-    _finalText = text;
-    onResult(text);
-    await Future.delayed(Duration(seconds: 2)); // 마치 인식한 것처럼 delay
-    print('(모의) 최종 텍스트: $_finalText');
-    print('(모의) 마이크 비활성화됨, API 전송 시작');
-
-    await ApiService.sendRecognizedText(_finalText, context);
-    onEnd(false);
-  }
-
   void startListening(
     BuildContext context, {
     required OnSTTStatusChange onStart,
