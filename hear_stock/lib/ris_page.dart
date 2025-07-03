@@ -46,7 +46,7 @@ class _RsiPageState extends State<RsiPage> {
     required String market,
   }) async {
     final baseUrl = dotenv.env['API_BASE_URL'];
-    print('✅ API_BASE_URL: $baseUrl');
+    print('API_BASE_URL: $baseUrl');
 
     final uri = Uri.parse('$baseUrl/api/indicator/?code=$code&market=$market');
 
@@ -97,17 +97,11 @@ class _RsiPageState extends State<RsiPage> {
   Future<String> fetchSummaryFromApi(String title) async {
     final baseUrl = dotenv.env['API_BASE_URL'];
     final uri = Uri.parse(
-      '$baseUrl/api/indicator/explain?code=005930&market=KR&metric=$title',
-    );
-
-    print('🔵 fetchSummaryFromApi 호출: $uri');
+      '$baseUrl/api/indicator/explain?code=005930&market=KR&metric=${title.toLowerCase()}',
+    ); // title을 소문자로 변환
 
     try {
       final response = await http.get(uri);
-
-      print('🔵 응답 상태 코드: ${response.statusCode}');
-      print('🔵 응답 본문: ${response.body}');
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['text'] ?? '$title에 대한 요약 정보가 없습니다.';
@@ -115,7 +109,6 @@ class _RsiPageState extends State<RsiPage> {
         return '$title 정보를 불러오는 데 실패했습니다.';
       }
     } catch (e) {
-      print('❌ fetchSummaryFromApi 오류: $e');
       return '요약 정보를 가져오는 중 오류가 발생했습니다.';
     }
   }
