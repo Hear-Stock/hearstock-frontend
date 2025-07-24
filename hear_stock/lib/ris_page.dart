@@ -38,7 +38,7 @@ class _RsiPageState extends State<RsiPage> {
   @override
   void initState() {
     super.initState();
-    fetchIndicatorValues(code: '005930', market: 'KR'); // 예: 삼성전자
+    fetchIndicatorValues(code: '005930', market: 'KR');
   }
 
   Future<void> fetchIndicatorValues({
@@ -46,8 +46,6 @@ class _RsiPageState extends State<RsiPage> {
     required String market,
   }) async {
     final baseUrl = dotenv.env['API_BASE_URL'];
-    print('API_BASE_URL: $baseUrl');
-
     final uri = Uri.parse('$baseUrl/api/indicator/?code=$code&market=$market');
 
     try {
@@ -98,7 +96,7 @@ class _RsiPageState extends State<RsiPage> {
     final baseUrl = dotenv.env['API_BASE_URL'];
     final uri = Uri.parse(
       '$baseUrl/api/indicator/explain?code=005930&market=KR&metric=${title.toLowerCase()}',
-    ); // title을 소문자로 변환
+    );
 
     try {
       final response = await http.get(uri);
@@ -195,11 +193,8 @@ class _RsiPageState extends State<RsiPage> {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),
                                       side: BorderSide(
-                                        color:
-                                            isSelected
-                                                ? Colors.white
-                                                : Colors.transparent,
-                                        width: 3,
+                                        color: Colors.white,
+                                        width: 3.5,
                                       ),
                                     ),
                                   ),
