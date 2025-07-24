@@ -26,13 +26,13 @@ class _RsiPageState extends State<RsiPage> {
   };
 
   final List<_IndicatorItem> items = [
-    _IndicatorItem(title: '시가총액', backgroundColor: Color(0xFF4A90E2)),
-    _IndicatorItem(title: '배당수익률', backgroundColor: Color(0xFFFF6B6B)),
-    _IndicatorItem(title: 'PBR', backgroundColor: Color(0xFF2ECC71)),
-    _IndicatorItem(title: 'PER', backgroundColor: Color(0xFFFFC107)),
-    _IndicatorItem(title: 'ROE', backgroundColor: Color(0xFFAF7AC5)),
-    _IndicatorItem(title: 'PSR', backgroundColor: Color(0xFFF3B6B6)),
-    _IndicatorItem(title: '외국인 소진율', backgroundColor: Color(0xFF80DEEA)),
+    _IndicatorItem(title: '시가총액', backgroundColor: Color(0xff262626)),
+    _IndicatorItem(title: '배당수익률', backgroundColor: Color(0xff262626)),
+    _IndicatorItem(title: 'PBR', backgroundColor: Color(0xff262626)),
+    _IndicatorItem(title: 'PER', backgroundColor: Color(0xff262626)),
+    _IndicatorItem(title: 'ROE', backgroundColor: Color(0xff262626)),
+    _IndicatorItem(title: 'PSR', backgroundColor: Color(0xff262626)),
+    _IndicatorItem(title: '외국인 소진율', backgroundColor: Color(0xff262626)),
   ];
 
   @override
@@ -191,7 +191,7 @@ class _RsiPageState extends State<RsiPage> {
                                 child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: item.backgroundColor,
-                                    foregroundColor: Color(0xff262626),
+                                    foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),
                                       side: BorderSide(
