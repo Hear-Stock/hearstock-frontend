@@ -5,6 +5,8 @@ import 'components/chart_header.dart';
 
 import '../services/voice_scroll_handler.dart';
 import '../widgets/mic_overlay.dart';
+import '../services/stock_chart_service.dart';
+import 'chart_page_controller.dart';
 
 class ChartPage extends StatefulWidget {
   @override
@@ -19,6 +21,53 @@ class _ChartPageState extends State<ChartPage> {
   final VoiceScrollHandler _voiceScrollHandler = VoiceScrollHandler();
   bool _isMicrophoneActive = false;
   String _recognizedText = "";
+
+  List<ChartData> _chartData = []; // 받아온 차트 데이터 저장
+  bool _isLoading = true;
+
+  // 기간에 맞는 period 포맷 변환
+  String convertTimelineToPeriod(String timeline) {
+    switch (timeline) {
+      case "1달":
+        return "1mo";
+      case "3달":
+        return "3mo";
+      case "1년":
+        return "1y";
+      default:
+        return "3mo";
+    }
+  }
+
+  // API 호출 함수
+  final ChartPageController _controller = ChartPageController();
+
+  Future<void> fetchData() async {
+    setState(() => _isLoading = true);
+    try {
+      final period = convertTimelineToPeriod(selectedTimeline);
+      final data = await _controller.fetchChartData(
+        timeline: selectedTimeline,
+        code: '005930',
+        market: 'KR',
+      );
+
+      setState(() {
+        _chartData = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print("에러 발생: $e");
+      setState(() => _isLoading = false);
+    }
+  }
+
+  // 시간 옵션 버튼 클릭 시 업데이트하는 메소드
+  void updateTimeline(String newTimeline) {
+    setState(() {
+      selectedTimeline = newTimeline;
+    });
+  }
 
   Future<void> _onRefresh() async {
     _voiceScrollHandler.startListening(
@@ -36,13 +85,6 @@ class _ChartPageState extends State<ChartPage> {
     });
   }
 
-  // 시간 옵션 버튼 클릭 시 업데이트하는 메소드
-  void updateTimeline(String newTimeline) {
-    setState(() {
-      selectedTimeline = newTimeline;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,7 +99,7 @@ class _ChartPageState extends State<ChartPage> {
         child: Stack(
           children: [
             SingleChildScrollView(
-              // 스크롤이 가능하게게
+              // 스크롤이 가능하게
               physics: const AlwaysScrollableScrollPhysics(), // 새로고침을 항상 가능하게
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -82,7 +124,7 @@ class _ChartPageState extends State<ChartPage> {
                   ),
                   SizedBox(height: 10),
                   // 차트 그래프
-                  ChartGraph(timeline: selectedTimeline),
+                  ChartGraph(data: _chartData),
                   SizedBox(height: 10),
                   Center(
                     child: Text(

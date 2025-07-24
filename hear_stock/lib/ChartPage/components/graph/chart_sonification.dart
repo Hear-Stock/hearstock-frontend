@@ -2,14 +2,7 @@
 
 import 'dart:ui';
 import 'package:flutter_soloud/flutter_soloud.dart';
-
-/// 차트 데이터 모델
-class ChartData {
-  final DateTime date;
-  final double price;
-
-  ChartData({required this.date, required this.price});
-}
+import '../../../services/stock_chart_service.dart';
 
 /// 차트 음향화 서비스
 /// - 차트 데이터를 받아 MIDI 사운드로 재생하는 로직을 라이브러리 형태로 분리

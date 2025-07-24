@@ -5,11 +5,12 @@ import 'package:flutter_soloud/flutter_soloud.dart';
 
 import 'chart_sonification.dart';
 import 'chart_painter.dart';
+import '../../../services/stock_chart_service.dart';
 
 class ChartGraph extends StatefulWidget {
-  final String timeline;
+  final List<ChartData> data;
 
-  ChartGraph({required this.timeline});
+  ChartGraph({required this.data});
 
   @override
   _ChartGraphState createState() => _ChartGraphState();
@@ -17,32 +18,28 @@ class ChartGraph extends StatefulWidget {
 
 class _ChartGraphState extends State<ChartGraph> {
   String selectedPrice = "";
-  List<ChartData> data = [];
-
   late ChartSonificationService _sonifier;
 
   @override
   void initState() {
     super.initState();
-    loadData();
+    _initializeSonifier();
   }
 
-  Future<void> loadData() async {
-    final raw = await rootBundle.loadString('assets/data/chart_data.json');
-    final List<dynamic> list = json.decode(raw);
-
-    data =
-        list.map((e) {
-          return ChartData(
-            date: DateTime.parse(e['date']),
-            price: e['price'].toDouble(),
-          );
-        }).toList();
-
-    _sonifier = ChartSonificationService(data: data);
+  Future<void> _initializeSonifier() async {
+    _sonifier = ChartSonificationService(data: widget.data);
     await _sonifier.init();
+    setState(() {}); // 초기화 완료 후 리렌더링
+  }
 
-    setState(() {}); // 데이터 로딩 및 초기화 완료
+  @override
+  void didUpdateWidget(covariant ChartGraph oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 데이터가 바뀌면 소리 서비스도 다시 초기화
+    if (oldWidget.data != widget.data) {
+      _sonifier.dispose();
+      _initializeSonifier();
+    }
   }
 
   @override
@@ -53,6 +50,8 @@ class _ChartGraphState extends State<ChartGraph> {
 
   @override
   Widget build(BuildContext context) {
+    final data = widget.data;
+
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 0),
       padding: const EdgeInsets.all(10),
