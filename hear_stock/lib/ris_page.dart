@@ -4,9 +4,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'services/voice_scroll_handler.dart';
-import 'widgets/mic_overlay.dart';
-
 class RsiPage extends StatefulWidget {
   @override
   _RsiPageState createState() => _RsiPageState();
@@ -17,29 +14,6 @@ class _RsiPageState extends State<RsiPage> {
 
   String selectedTitle = '시가총액';
   String selectedValue = '';
-
-  // 음성 인식 관련 변수 추가
-  final VoiceScrollHandler _voiceScrollHandler = VoiceScrollHandler();
-  bool _isMicrophoneActive = false;
-  String _recognizedText = "";
-
-  Future<void> _onRefresh() async {
-    _voiceScrollHandler.simulateInput(
-      "삼성전자 주식차트 1년치 알려줘",
-      context,
-      onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),
-      onResult: (text) => setState(() => _recognizedText = text),
-      onEnd: (isActive) => setState(() => _isMicrophoneActive = isActive),
-    );
-  }
-
-  // Future<void> _onRefresh() async {
-  //   _voiceScrollHandler.startListening(
-  //     onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),
-  //     onResult: (text) => setState(() => _recognizedText = text),
-  //     onEnd: (isActive) => setState(() => _isMicrophoneActive = isActive),
-  //   );
-  // }
 
   Map<String, String> indicatorValues = {
     '시가총액': '',
@@ -52,19 +26,19 @@ class _RsiPageState extends State<RsiPage> {
   };
 
   final List<_IndicatorItem> items = [
-    _IndicatorItem(title: '시가총액', backgroundColor: Color(0xFF4A90E2)),
-    _IndicatorItem(title: '배당수익률', backgroundColor: Color(0xFFFF6B6B)),
-    _IndicatorItem(title: 'PBR', backgroundColor: Color(0xFF2ECC71)),
-    _IndicatorItem(title: 'PER', backgroundColor: Color(0xFFFFC107)),
-    _IndicatorItem(title: 'ROE', backgroundColor: Color(0xFFAF7AC5)),
-    _IndicatorItem(title: 'PSR', backgroundColor: Color(0xFFF3B6B6)),
-    _IndicatorItem(title: '외국인 소진율', backgroundColor: Color(0xFF80DEEA)),
+    _IndicatorItem(title: '시가총액', backgroundColor: Color(0xff262626)),
+    _IndicatorItem(title: '배당수익률', backgroundColor: Color(0xff262626)),
+    _IndicatorItem(title: 'PBR', backgroundColor: Color(0xff262626)),
+    _IndicatorItem(title: 'PER', backgroundColor: Color(0xff262626)),
+    _IndicatorItem(title: 'ROE', backgroundColor: Color(0xff262626)),
+    _IndicatorItem(title: 'PSR', backgroundColor: Color(0xff262626)),
+    _IndicatorItem(title: '외국인 소진율', backgroundColor: Color(0xff262626)),
   ];
 
   @override
   void initState() {
     super.initState();
-    fetchIndicatorValues(code: '005930', market: 'KR'); // 예: 삼성전자
+    fetchIndicatorValues(code: '005930', market: 'KR');
   }
 
   Future<void> fetchIndicatorValues({
@@ -119,14 +93,16 @@ class _RsiPageState extends State<RsiPage> {
   }
 
   Future<String> fetchSummaryFromApi(String title) async {
-    final baseUrl = dotenv.env['API_BASE_URL']!;
-    final uri = Uri.parse('${baseUrl}api/summary/?title=$title');
+    final baseUrl = dotenv.env['API_BASE_URL'];
+    final uri = Uri.parse(
+      '$baseUrl/api/indicator/explain?code=005930&market=KR&metric=${title.toLowerCase()}',
+    );
 
     try {
       final response = await http.get(uri);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['summary'] ?? '$title에 대한 요약 정보가 없습니다.';
+        return data['text'] ?? '$title에 대한 요약 정보가 없습니다.';
       } else {
         return '$title 정보를 불러오는 데 실패했습니다.';
       }
@@ -148,13 +124,6 @@ class _RsiPageState extends State<RsiPage> {
     await flutterTts.speak(summary);
   }
 
-  // 음성 인식 중단
-  void _stopListeningManually() {
-    setState(() {
-      _isMicrophoneActive = false;
-    });
-  }
-
   @override
   void dispose() {
     flutterTts.stop();
@@ -167,140 +136,116 @@ class _RsiPageState extends State<RsiPage> {
 
     return Scaffold(
       backgroundColor: Color(0xff262626),
-      body: RefreshIndicator(
-        onRefresh: _onRefresh,
-        child: Stack(
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(30, 60, 30, 30),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(30, 60, 30, 30),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Semantics(
-                    header: true,
-                    child: Text(
-                      selectedTitle,
-                      style: TextStyle(
-                        fontSize: 22 * textScale,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    selectedValue,
-                    style: TextStyle(
-                      fontSize: 34 * textScale,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 30),
-                  Expanded(
-                    child: FocusTraversalGroup(
-                      policy: ReadingOrderTraversalPolicy(),
-                      child: GridView(
-                        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 200,
-                          crossAxisSpacing: 20,
-                          mainAxisSpacing: 20,
-                          childAspectRatio: 1.2,
-                        ),
-                        children:
-                            items
-                                .where(
-                                  (item) =>
-                                      indicatorValues.containsKey(item.title),
-                                )
-                                .map((item) {
-                                  final isSelected =
-                                      item.title == selectedTitle;
-
-                                  return Semantics(
-                                    label:
-                                        '${item.title} 버튼${isSelected ? ', 선택됨' : ''}',
-                                    button: true,
-                                    selected: isSelected,
-                                    child: Tooltip(
-                                      message: '${item.title} 선택',
-                                      child: ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: item.backgroundColor,
-                                          foregroundColor: Color(0xff262626),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              16,
-                                            ),
-                                            side: BorderSide(
-                                              color:
-                                                  isSelected
-                                                      ? Colors.white
-                                                      : Colors.transparent,
-                                              width: 3,
-                                            ),
-                                          ),
-                                        ),
-                                        onPressed:
-                                            () =>
-                                                _onIndicatorPressed(item.title),
-                                        onLongPress:
-                                            () => _onIndicatorLongPressed(
-                                              item.title,
-                                            ),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              item.title,
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                fontSize: 22 * textScale,
-                                                fontWeight: FontWeight.w900,
-                                              ),
-                                            ),
-                                            if (isSelected)
-                                              Padding(
-                                                padding: const EdgeInsets.only(
-                                                  top: 8.0,
-                                                ),
-                                                child: Icon(
-                                                  Icons.check_circle,
-                                                  size: 20 * textScale,
-                                                  color: Colors.white,
-                                                  semanticLabel: '선택됨',
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                })
-                                .toList(),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Center(
-                    child: Text(
-                      '아래로 스크롤해서 마이크를 작동시키세요.',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 15 * textScale,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
+            Semantics(
+              header: true,
+              child: Text(
+                selectedTitle,
+                style: TextStyle(
+                  fontSize: 22 * textScale,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
             ),
-            // 마이크 활성 시 UI 오버레이
-            if (_isMicrophoneActive)
-              MicOverlay(
-                recognizedText: _recognizedText,
-                onStop: _stopListeningManually,
+            Text(
+              selectedValue,
+              style: TextStyle(
+                fontSize: 34 * textScale,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
+            ),
+            SizedBox(height: 30),
+            Expanded(
+              child: FocusTraversalGroup(
+                policy: ReadingOrderTraversalPolicy(),
+                child: GridView(
+                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 200,
+                    crossAxisSpacing: 20,
+                    mainAxisSpacing: 20,
+                    childAspectRatio: 1.2,
+                  ),
+                  children:
+                      items
+                          .where(
+                            (item) => indicatorValues.containsKey(item.title),
+                          )
+                          .map((item) {
+                            final isSelected = item.title == selectedTitle;
+
+                            return Semantics(
+                              label:
+                                  '${item.title} 버튼${isSelected ? ', 선택됨' : ''}',
+                              button: true,
+                              selected: isSelected,
+                              child: Tooltip(
+                                message: '${item.title} 선택',
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: item.backgroundColor,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      side: BorderSide(
+                                        color: Colors.white,
+                                        width: 3.5,
+                                      ),
+                                    ),
+                                  ),
+                                  onPressed:
+                                      () => _onIndicatorPressed(item.title),
+                                  onLongPress:
+                                      () => _onIndicatorLongPressed(item.title),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        item.title,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 22 * textScale,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                      if (isSelected)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 8.0,
+                                          ),
+                                          child: Icon(
+                                            Icons.check_circle,
+                                            size: 20 * textScale,
+                                            color: Colors.white,
+                                            semanticLabel: '선택됨',
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          })
+                          .toList(),
+                ),
+              ),
+            ),
+            SizedBox(height: 10),
+            Center(
+              child: Text(
+                '아래로 스크롤해서 마이크를 작동시키세요.',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 15 * textScale,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
           ],
         ),
       ),
