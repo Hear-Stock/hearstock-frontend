@@ -102,7 +102,7 @@ class _RsiPageState extends State<RsiPage> {
       final response = await http.get(uri);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['text'] ?? '$title에 대한 요약 정보가 없습니다.';
+        return data['summary'] ?? '$title에 대한 요약 정보가 없습니다.';
       } else {
         return '$title 정보를 불러오는 데 실패했습니다.';
       }
