@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'components/graph/chart_graph.dart';
 import 'components/chart_timeline.dart';
 import 'components/chart_header.dart';
 
 import '../services/voice_scroll_handler.dart';
 import '../widgets/mic_overlay.dart';
+import '../services/stock_chart_service.dart';
+import 'chart_page_controller.dart';
+import '../providers/intent_result_provider.dart';
 
 class ChartPage extends StatefulWidget {
   @override
@@ -13,16 +17,86 @@ class ChartPage extends StatefulWidget {
 
 class _ChartPageState extends State<ChartPage> {
   // 선택된 시간 옵션
-  String selectedTimeline = "3달";
+  String selectedTimeline = "";
 
   // 음성 인식 관련 변수 추가
   final VoiceScrollHandler _voiceScrollHandler = VoiceScrollHandler();
   bool _isMicrophoneActive = false;
   String _recognizedText = "";
 
+  List<ChartData> _chartData = []; // 받아온 차트 데이터 저장
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final intentProvider = Provider.of<IntentResultProvider>(
+        context,
+        listen: false,
+      );
+
+      if (intentProvider != null) {
+        final code = intentProvider.code ?? '';
+        final market = intentProvider.market ?? '';
+        final period = intentProvider.period ?? '3mo';
+
+        _fetchDataFromIntent(code, market, period);
+      }
+    });
+  }
+
+  // 기간에 맞는 period 포맷 변환
+  String convertTimelineToPeriod(String timeline) {
+    switch (timeline) {
+      case "1달":
+        return "1mo";
+      case "3달":
+        return "3mo";
+      case "1년":
+        return "1y";
+      default:
+        return "3mo";
+    }
+  }
+
+  // API 호출 함수
+  final ChartPageController _controller = ChartPageController();
+
+  Future<void> _fetchDataFromIntent(
+    String code,
+    String market,
+    String period,
+  ) async {
+    setState(() => _isLoading = true);
+
+    try {
+      final period = convertTimelineToPeriod(selectedTimeline);
+      final data = await _controller.fetchChartData(
+        timeline: selectedTimeline,
+        code: code,
+        market: market,
+      );
+
+      setState(() {
+        _chartData = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print("차트 불러오기 실패: $e");
+      setState(() => _isLoading = false);
+    }
+  }
+
+  // 시간 옵션 버튼 클릭 시 업데이트하는 메소드
+  void updateTimeline(String newTimeline) {
+    setState(() {
+      selectedTimeline = newTimeline;
+    });
+  }
+
   Future<void> _onRefresh() async {
-    _voiceScrollHandler.simulateInput(
-      "삼성전자 투자지표 알려줘",
+    _voiceScrollHandler.startListening(
       context,
       onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),
       onResult: (text) => setState(() => _recognizedText = text),
@@ -30,25 +104,10 @@ class _ChartPageState extends State<ChartPage> {
     );
   }
 
-  // Future<void> _onRefresh() async {
-  //   _voiceScrollHandler.startListening(
-  //     onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),
-  //     onResult: (text) => setState(() => _recognizedText = text),
-  //     onEnd: (isActive) => setState(() => _isMicrophoneActive = isActive),
-  //   );
-  // }
-
   // 음성 인식 중단
   void _stopListeningManually() {
     setState(() {
       _isMicrophoneActive = false;
-    });
-  }
-
-  // 시간 옵션 버튼 클릭 시 업데이트하는 메소드
-  void updateTimeline(String newTimeline) {
-    setState(() {
-      selectedTimeline = newTimeline;
     });
   }
 
@@ -66,7 +125,7 @@ class _ChartPageState extends State<ChartPage> {
         child: Stack(
           children: [
             SingleChildScrollView(
-              // 스크롤이 가능하게게
+              // 스크롤이 가능하게
               physics: const AlwaysScrollableScrollPhysics(), // 새로고침을 항상 가능하게
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -91,7 +150,7 @@ class _ChartPageState extends State<ChartPage> {
                   ),
                   SizedBox(height: 10),
                   // 차트 그래프
-                  ChartGraph(timeline: selectedTimeline),
+                  ChartGraph(data: _chartData),
                   SizedBox(height: 10),
                   Center(
                     child: Text(

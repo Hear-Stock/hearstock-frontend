@@ -1,120 +1,46 @@
 // lib/chart_sonification.dart
 
 import 'dart:ui';
-import 'package:flutter_midi_pro/flutter_midi_pro.dart';
-
-/// 차트 데이터 모델
-class ChartData {
-  final DateTime date;
-  final double price;
-
-  ChartData({required this.date, required this.price});
-}
+import 'package:flutter_soloud/flutter_soloud.dart';
+import '../../../services/stock_chart_service.dart';
 
 /// 차트 음향화 서비스
 /// - 차트 데이터를 받아 MIDI 사운드로 재생하는 로직을 라이브러리 형태로 분리
 class ChartSonificationService {
   final List<ChartData> data;
-  final MidiPro _midiPro;
-  final int minKey;
-  final int maxKey;
-  int? _soundfontId;
+  final SoLoud soloud = SoLoud.instance;
+  late AudioSource _ping;
 
-  late double _minPrice, _maxPrice;
+  ChartSonificationService({required this.data});
 
-  ChartSonificationService({
-    required this.data,
-    MidiPro? midiPro,
-    this.minKey = 40,
-    this.maxKey = 80,
-  }) : _midiPro = midiPro ?? MidiPro() {
-    _initPriceBounds();
+  Future<void> init() async {
+    await soloud.init();
+    _ping = await soloud.loadAsset('assets/audio/sample3.wav');
+
+    // 3D 리스너 위치 초기화
+    soloud.set3dListenerPosition(0, 0, 0);
+    soloud.set3dListenerAt(0, 0, -1);
   }
 
-  void _initPriceBounds() {
-    if (data.isEmpty) {
-      _minPrice = 0;
-      _maxPrice = 1;
-    } else {
-      _minPrice = data.map((e) => e.price).reduce((a, b) => a < b ? a : b);
-      _maxPrice = data.map((e) => e.price).reduce((a, b) => a > b ? a : b);
-    }
+  void dispose() {
+    soloud.deinit();
   }
 
-  /// SoundFont 파일 로딩
-  Future<void> loadSoundFont(
-    String path, {
-    int bank = 0,
-    int program = 0,
-  }) async {
-    _soundfontId = await _midiPro.loadSoundfont(
-      path: path,
-      bank: bank,
-      program: program,
-    );
-    if (_soundfontId != null) {
-      // 채널 0,1에 동일 악기 설정
-      await _midiPro.selectInstrument(
-        sfId: _soundfontId!,
-        channel: 0,
-        bank: bank,
-        program: program,
-      );
-      await _midiPro.selectInstrument(
-        sfId: _soundfontId!,
-        channel: 1,
-        bank: bank,
-        program: program,
-      );
-    }
-  }
-
-  /// 주어진 화면 X 위치에 해당하는 데이터를 MIDI로 재생하고, 날짜와 가격 문자열 반환
-  String playNoteAtPosition(
-    Offset position,
-    double chartWidth, {
-    int channelLeft = 0,
-    int channelRight = 1,
-    int durationMillis = 150,
-  }) {
-    if (data.isEmpty || _soundfontId == null) return '';
-
-    final int index = ((position.dx / (chartWidth / (data.length - 1))).round())
+  // 실제 소리 재생
+  Future<String> play3DSoundAt(Offset localPos, Size chartSize) async {
+    final idx = ((localPos.dx / chartSize.width) * (data.length - 1))
+        .round()
         .clamp(0, data.length - 1);
-    final ChartData point = data[index];
+    final point = data[idx];
 
-    final int key = _mapPriceToKey(point.price);
-    final double ratio = (position.dx / chartWidth).clamp(0.0, 1.0);
+    // 2D 위치를 3D 공간 좌표로 변환
+    double x = (localPos.dx / chartSize.width) * 20 - 10;
+    double y = (1 - localPos.dy / chartSize.height) * 10 - 5;
+    double z = 0;
 
-    final int velL = (ratio * 127).round();
-    final int velR = ((1 - ratio) * 127).round();
+    // 3D 위치에서 소리 재생
+    final handle = await soloud.play3d(_ping, x, y, z);
 
-    _midiPro.playNote(
-      sfId: _soundfontId!,
-      channel: channelLeft,
-      key: key,
-      velocity: velL,
-    );
-    _midiPro.playNote(
-      sfId: _soundfontId!,
-      channel: channelRight,
-      key: key,
-      velocity: velR,
-    );
-
-    Future.delayed(Duration(milliseconds: durationMillis), () {
-      _midiPro.stopNote(sfId: _soundfontId!, channel: channelLeft, key: key);
-      _midiPro.stopNote(sfId: _soundfontId!, channel: channelRight, key: key);
-    });
-
-    final String dateStr =
-        point.date.toLocal().toIso8601String().split('T').first;
-    return '$dateStr: \$${point.price.toString()}';
-  }
-
-  int _mapPriceToKey(double price) {
-    final double normalized = ((price - _minPrice) / (_maxPrice - _minPrice))
-        .clamp(0.0, 1.0);
-    return (minKey + (normalized * (maxKey - minKey))).round();
+    return '${point.date.toIso8601String().split("T")[0]}: ${point.price}';
   }
 }

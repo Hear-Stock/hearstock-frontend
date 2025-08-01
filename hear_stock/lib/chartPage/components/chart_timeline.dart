@@ -27,11 +27,13 @@ class ChartTimeline extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           ),
         ),
+        SizedBox(height: 20),
         Wrap(
           spacing: 4, // 버튼 간 간격
           runSpacing: 4, // 줄 간 간격
           alignment: WrapAlignment.center, // 버튼들을 가운데 정렬
           children: <Widget>[
+            _buildTimelineButton("실시간"),
             _buildTimelineButton("3달"),
             _buildTimelineButton("1년"),
             _buildTimelineButton("5년"),
