@@ -51,6 +51,7 @@ class MicOverlay extends StatelessWidget {
                 shape: CircleBorder(),
                 padding: EdgeInsets.all(50),
                 backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
               ),
             ),
           ],

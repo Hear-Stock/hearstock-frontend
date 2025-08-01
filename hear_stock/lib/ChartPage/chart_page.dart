@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'components/graph/chart_graph.dart';
 import 'components/chart_timeline.dart';
 import 'components/chart_header.dart';
@@ -7,6 +8,7 @@ import '../services/voice_scroll_handler.dart';
 import '../widgets/mic_overlay.dart';
 import '../services/stock_chart_service.dart';
 import 'chart_page_controller.dart';
+import '../providers/intent_result_provider.dart';
 
 class ChartPage extends StatefulWidget {
   @override
@@ -15,7 +17,7 @@ class ChartPage extends StatefulWidget {
 
 class _ChartPageState extends State<ChartPage> {
   // 선택된 시간 옵션
-  String selectedTimeline = "3달";
+  String selectedTimeline = "";
 
   // 음성 인식 관련 변수 추가
   final VoiceScrollHandler _voiceScrollHandler = VoiceScrollHandler();
@@ -24,6 +26,25 @@ class _ChartPageState extends State<ChartPage> {
 
   List<ChartData> _chartData = []; // 받아온 차트 데이터 저장
   bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final intentProvider = Provider.of<IntentResultProvider>(
+        context,
+        listen: false,
+      );
+
+      if (intentProvider != null) {
+        final code = intentProvider.code ?? '';
+        final market = intentProvider.market ?? '';
+        final period = intentProvider.period ?? '3mo';
+
+        _fetchDataFromIntent(code, market, period);
+      }
+    });
+  }
 
   // 기간에 맞는 period 포맷 변환
   String convertTimelineToPeriod(String timeline) {
@@ -42,14 +63,19 @@ class _ChartPageState extends State<ChartPage> {
   // API 호출 함수
   final ChartPageController _controller = ChartPageController();
 
-  Future<void> fetchData() async {
+  Future<void> _fetchDataFromIntent(
+    String code,
+    String market,
+    String period,
+  ) async {
     setState(() => _isLoading = true);
+
     try {
       final period = convertTimelineToPeriod(selectedTimeline);
       final data = await _controller.fetchChartData(
         timeline: selectedTimeline,
-        code: '005930',
-        market: 'KR',
+        code: code,
+        market: market,
       );
 
       setState(() {
@@ -57,7 +83,7 @@ class _ChartPageState extends State<ChartPage> {
         _isLoading = false;
       });
     } catch (e) {
-      print("에러 발생: $e");
+      print("차트 불러오기 실패: $e");
       setState(() => _isLoading = false);
     }
   }
