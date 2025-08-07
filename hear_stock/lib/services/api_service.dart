@@ -53,13 +53,8 @@ class ApiService {
 
       if (response.statusCode == 200) {
         print('데이터 요청 성공: ${response.body}');
-        print('아아아ㅏ아아아');
-        final bodyText = response.body;
-        print('🧪 응답 바디 길이: ${bodyText.length}');
-        print('🧪 응답 바디 샘플: ${bodyText.substring(0, 100)}');
+
         final fetchedData = json.decode(response.body);
-        print('📦 fetchedData 타입: ${fetchedData.runtimeType}');
-        print('ㅎㄹㄹㄹㄹㄹㄹㄹㄹㄹㄹ');
 
         final name = data['name'];
         final code = data['code'].toString().split('.')[0];

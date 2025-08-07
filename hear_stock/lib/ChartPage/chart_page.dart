@@ -24,10 +24,11 @@ class _ChartPageState extends State<ChartPage> {
 
     // intent 기반 진입인 경우
     if (IntentResultStore.chartJsonList.isNotEmpty) {
+      final period = IntentResultStore.period ?? '3mo';
+      final timeline = convertPeriodToTimeline(period);
+
       setState(() {
-        selectedTimeline = convertTimelineToPeriod(
-          IntentResultStore.period ?? '3mo',
-        );
+        selectedTimeline = timeline;
         _chartData =
             IntentResultStore.chartJsonList
                 .cast<Map<String, dynamic>>()
@@ -60,6 +61,20 @@ class _ChartPageState extends State<ChartPage> {
         return "1y";
       default:
         return "3mo";
+    }
+  }
+
+  // 받아온 period를 기간으로
+  String convertPeriodToTimeline(String period) {
+    switch (period) {
+      case "1mo":
+        return "1달";
+      case "3mo":
+        return "3달";
+      case "1y":
+        return "1년";
+      default:
+        return "3달";
     }
   }
 

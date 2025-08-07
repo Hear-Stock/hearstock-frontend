@@ -17,9 +17,6 @@ class IntentResultStore {
     market = market_;
     period = period_;
     chartJsonList = chartData;
-    print("✅ IntentResultStore 저장 완료");
-    print("name: $name, code: $code, period: $period");
-    print("chartJsonList: ${chartJsonList.length}개");
   }
 
   static void clear() {
