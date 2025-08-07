@@ -3,11 +3,13 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 
+import '../stores/intent_result_store.dart';
+
 class ApiService {
   static final String baseUrl = dotenv.env['API_BASE_URL'] ?? '';
 
   // 텍스트를 보내 intent 파악
-  static Future<void> sendRecognizedText(
+  static Future<Map<String, dynamic>?> sendRecognizedText(
     String text,
     BuildContext context,
   ) async {
@@ -31,7 +33,7 @@ class ApiService {
   }
 
   // intent 결과에 따라 실제 API 호출
-  static Future<void> _fetchDataFromIntent(
+  static Future<dynamic> _fetchDataFromIntent(
     Map<String, dynamic> data,
     BuildContext context,
   ) async {
@@ -43,24 +45,52 @@ class ApiService {
       return;
     }
 
-    // API 요청
-    final url = Uri.parse('$baseUrl$path');
+    try {
+      // API 요청
+      final url = Uri.parse('$baseUrl$path');
 
-    final response = await http.get(url);
+      final response = await http.get(url);
 
-    if (response.statusCode == 200) {
-      print('데이터 요청 성공: ${response.body}');
+      if (response.statusCode == 200) {
+        print('데이터 요청 성공: ${response.body}');
+        print('아아아ㅏ아아아');
+        final bodyText = response.body;
+        print('🧪 응답 바디 길이: ${bodyText.length}');
+        print('🧪 응답 바디 샘플: ${bodyText.substring(0, 100)}');
+        final fetchedData = json.decode(response.body);
+        print('📦 fetchedData 타입: ${fetchedData.runtimeType}');
+        print('ㅎㄹㄹㄹㄹㄹㄹㄹㄹㄹㄹ');
 
-      // intent에 따라 페이지 이동
-      if (intent == 'chart') {
-        Navigator.pushNamed(context, '/chart');
-      } else if (intent == 'indicator') {
-        Navigator.pushNamed(context, '/rsi');
+        final name = data['name'];
+        final code = data['code'].toString().split('.')[0];
+        final market = data['market'];
+        final period = data['period'];
+
+        // 저장
+        IntentResultStore.set(
+          name_: name,
+          code_: code,
+          market_: market,
+          period_: period,
+          chartData: fetchedData,
+        );
+
+        // intent에 따라 페이지 이동
+        if (intent == 'chart') {
+          Navigator.pushNamed(context, '/chart');
+        } else if (intent == 'indicator') {
+          Navigator.pushNamed(context, '/rsi');
+        } else {
+          print('알 수 없는 intent: $intent');
+        }
+
+        return fetchedData;
       } else {
-        print('알 수 없는 intent: $intent');
+        print('데이터 요청 실패: ${response.statusCode}, ${response.body}');
       }
-    } else {
-      print('데이터 요청 실패: ${response.statusCode}, ${response.body}');
+    } catch (e, stack) {
+      print('❌ 예외 발생: $e');
+      print('🔍 Stacktrace:\n$stack');
     }
   }
 }

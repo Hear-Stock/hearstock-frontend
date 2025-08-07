@@ -7,6 +7,7 @@ import '../services/voice_scroll_handler.dart';
 import '../widgets/mic_overlay.dart';
 import '../services/stock_chart_service.dart';
 import 'chart_page_controller.dart';
+import '../stores/intent_result_store.dart';
 
 class ChartPage extends StatefulWidget {
   @override
@@ -16,6 +17,29 @@ class ChartPage extends StatefulWidget {
 class _ChartPageState extends State<ChartPage> {
   // 선택된 시간 옵션
   String selectedTimeline = "3달";
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // intent 기반 진입인 경우
+    if (IntentResultStore.chartJsonList.isNotEmpty) {
+      setState(() {
+        selectedTimeline = convertTimelineToPeriod(
+          IntentResultStore.period ?? '3mo',
+        );
+        _chartData =
+            IntentResultStore.chartJsonList
+                .cast<Map<String, dynamic>>()
+                .map((e) => ChartData.fromJson(e))
+                .toList();
+        _isLoading = false;
+      });
+    } else {
+      // 기본 API 요청
+      fetchData();
+    }
+  }
 
   // 음성 인식 관련 변수 추가
   final VoiceScrollHandler _voiceScrollHandler = VoiceScrollHandler();

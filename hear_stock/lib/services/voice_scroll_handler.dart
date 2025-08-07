@@ -19,7 +19,7 @@ class VoiceScrollHandler {
     required OnSTTStatusChange onEnd,
   }) async {
     onStart(true);
-    _finalText = ''; // 초기화
+    _finalText = '삼성전자 3개월치 주식차트 보여줘'; // 초기화
 
     await _speechRecognition.startListening((result) {
       print('onResult 콜백 실행됨: $result');
