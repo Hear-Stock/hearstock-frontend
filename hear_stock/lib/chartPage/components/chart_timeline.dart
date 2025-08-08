@@ -13,20 +13,24 @@ class ChartTimeline extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        TextButton(
-          onPressed: () {},
-          child: Text(
-            '실시간',
-            style: TextStyle(fontSize: 18, color: Colors.black),
-          ),
-          style: TextButton.styleFrom(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
+        SizedBox(
+          width: MediaQuery.of(context).size.width * 0.8,
+          child: TextButton(
+            onPressed: () {},
+            child: Text(
+              '실시간',
+              style: TextStyle(fontSize: 18, color: Colors.black),
             ),
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            ),
           ),
         ),
+        SizedBox(height: 20),
         Wrap(
           spacing: 4, // 버튼 간 간격
           runSpacing: 4, // 줄 간 간격
