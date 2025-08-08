@@ -5,6 +5,8 @@ class SpeechRecognition {
 
   // 음성 인식 시작 함수
   Future<void> startListening(Function(String) onResult) async {
+    await _speech.stop();
+
     bool available = await _speech.initialize(); // 음성 인식 초기화
 
     if (available) {

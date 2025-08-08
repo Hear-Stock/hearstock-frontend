@@ -1,13 +1,16 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
-import 'chart_sonification.dart';
+import 'package:flutter_soloud/flutter_soloud.dart';
+
+//import 'chart_sonification.dart';
 import 'chart_painter.dart';
+import '../../../services/stock_chart_service.dart';
 
 class ChartGraph extends StatefulWidget {
-  final String timeline;
+  final List<ChartData> data;
 
-  ChartGraph({required this.timeline});
+  ChartGraph({required this.data});
 
   @override
   _ChartGraphState createState() => _ChartGraphState();
@@ -15,38 +18,40 @@ class ChartGraph extends StatefulWidget {
 
 class _ChartGraphState extends State<ChartGraph> {
   String selectedPrice = "";
-  List<ChartData> data = [];
-
-  late ChartSonificationService _sonifier;
+  //late ChartSonificationService _sonifier;
 
   @override
   void initState() {
     super.initState();
-    loadData();
+    //_initializeSonifier();
   }
 
-  Future<void> loadData() async {
-    final raw = await rootBundle.loadString('assets/data/chart_data.json');
-    final List<dynamic> list = json.decode(raw);
-    data =
-        list
-            .map(
-              (e) => ChartData(
-                date: DateTime.parse(e['date']),
-                price: e['price'].toDouble(),
-              ),
-            )
-            .toList();
+  // Future<void> _initializeSonifier() async {
+  //   _sonifier = ChartSonificationService(data: widget.data);
+  //   await _sonifier.init();
+  //   setState(() {}); // 초기화 완료 후 리렌더링
+  // }
 
-    // 서비스 초기화 & SoundFont 로드
-    _sonifier = ChartSonificationService(data: data);
-    await _sonifier.loadSoundFont('assets/sf2/Piano.sf2');
+  // @override
+  // void didUpdateWidget(covariant ChartGraph oldWidget) {
+  //   super.didUpdateWidget(oldWidget);
+  //   // 데이터가 바뀌면 소리 서비스도 다시 초기화
+  //   if (oldWidget.data != widget.data) {
+  //     _sonifier.dispose();
+  //     _initializeSonifier();
+  //   }
+  // }
 
-    setState(() {}); // 데이터 & 서비스 준비 완료
-  }
+  // @override
+  // void dispose() {
+  //   _sonifier.dispose();
+  //   super.dispose();
+  // }
 
   @override
   Widget build(BuildContext context) {
+    final data = widget.data;
+
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 0),
       padding: const EdgeInsets.all(10),
@@ -59,24 +64,26 @@ class _ChartGraphState extends State<ChartGraph> {
               : LayoutBuilder(
                 builder: (context, constraints) {
                   final chartWidth = constraints.maxWidth;
+                  final chartHeight = constraints.maxHeight;
+
                   return GestureDetector(
-                    onPanUpdate: (details) {
-                      final label = _sonifier.playNoteAtPosition(
-                        details.localPosition,
-                        chartWidth, // ← 실제 박스 너비
-                      );
-                      setState(() => selectedPrice = label);
+                    onPanUpdate: (details) async {
+                      // final label = await _sonifier.play3DSoundAt(
+                      //   details.localPosition,
+                      //   Size(chartWidth, chartHeight),
+                      // );
+                      // setState(() => selectedPrice = label);
                     },
-                    onTapUp: (details) {
-                      final label = _sonifier.playNoteAtPosition(
-                        details.localPosition,
-                        chartWidth,
-                      );
-                      setState(() => selectedPrice = label);
+                    onTapUp: (details) async {
+                      // final label = await _sonifier.play3DSoundAt(
+                      //   details.localPosition,
+                      //   Size(chartWidth, chartHeight),
+                      // );
+                      // setState(() => selectedPrice = label);
                     },
                     child: CustomPaint(
                       painter: ChartPainter(data: data),
-                      size: Size(chartWidth, constraints.maxHeight),
+                      size: Size(chartWidth, chartHeight),
                     ),
                   );
                 },
