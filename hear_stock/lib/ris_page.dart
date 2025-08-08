@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'services/voice_scroll_handler.dart';
 import 'widgets/mic_overlay.dart';
+import './stores/intent_result_store.dart';
 
 class RsiPage extends StatefulWidget {
   @override
@@ -47,7 +48,22 @@ class _RsiPageState extends State<RsiPage> {
   @override
   void initState() {
     super.initState();
-    fetchIndicatorValues(code: '005930', market: 'KR');
+    //fetchIndicatorValues(code: '005930', market: 'KR');
+
+    final data = IntentResultStore.indicatorData;
+
+    setState(() {
+      indicatorValues = {
+        '시가총액': _formatValue(data['market_cap'], unit: '원'),
+        '배당수익률': '${data['dividend_yield']}%',
+        'PBR': '${data['pbr']}배',
+        'PER': '${data['per']}배',
+        'ROE': '${data['roe']}%',
+        'PSR': '${data['psr']}배',
+        if (data.containsKey('foreign_ownership'))
+          '외국인 소진율': '${data['foreign_ownership']}%',
+      };
+    });
 
     _scrollController.addListener(() {
       if (_isMicrophoneActive) {
@@ -72,42 +88,42 @@ class _RsiPageState extends State<RsiPage> {
     );
   }
 
-  Future<void> fetchIndicatorValues({
-    required String code,
-    required String market,
-  }) async {
-    final baseUrl = dotenv.env['API_BASE_URL'];
-    final uri = Uri.parse('$baseUrl/api/indicator/?code=$code&market=$market');
+  // Future<void> fetchIndicatorValues({
+  //   required String code,
+  //   required String market,
+  // }) async {
+  //   final baseUrl = dotenv.env['API_BASE_URL'];
+  //   final uri = Uri.parse('$baseUrl/api/indicator/?code=$code&market=$market');
 
-    try {
-      final response = await http.get(uri);
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+  //   try {
+  //     final response = await http.get(uri);
+  //     if (response.statusCode == 200) {
+  //       final data = jsonDecode(response.body);
 
-        setState(() {
-          indicatorValues = {
-            '시가총액': _formatValue(data['market_cap'], unit: '원'),
-            '배당수익률': '${data['dividend_yield']}%',
-            'PBR': '${data['pbr']}배',
-            'PER': '${data['per']}배',
-            'ROE': '${data['roe']}%',
-            'PSR': '${data['psr']}배',
-            if (data.containsKey('foreign_ownership'))
-              '외국인 소진율': '${data['foreign_ownership']}%',
-          };
-          selectedValue = indicatorValues[selectedTitle] ?? '';
-        });
-      } else {
-        setState(() {
-          indicatorValues.updateAll((key, value) => '불러오기 실패');
-        });
-      }
-    } catch (e) {
-      setState(() {
-        indicatorValues.updateAll((key, value) => '에러 발생');
-      });
-    }
-  }
+  //       setState(() {
+  //         indicatorValues = {
+  //           '시가총액': _formatValue(data['market_cap'], unit: '원'),
+  //           '배당수익률': '${data['dividend_yield']}%',
+  //           'PBR': '${data['pbr']}배',
+  //           'PER': '${data['per']}배',
+  //           'ROE': '${data['roe']}%',
+  //           'PSR': '${data['psr']}배',
+  //           if (data.containsKey('foreign_ownership'))
+  //             '외국인 소진율': '${data['foreign_ownership']}%',
+  //         };
+  //         selectedValue = indicatorValues[selectedTitle] ?? '';
+  //       });
+  //     } else {
+  //       setState(() {
+  //         indicatorValues.updateAll((key, value) => '불러오기 실패');
+  //       });
+  //     }
+  //   } catch (e) {
+  //     setState(() {
+  //       indicatorValues.updateAll((key, value) => '에러 발생');
+  //     });
+  //   }
+  // }
 
   String _formatValue(dynamic value, {String unit = ''}) {
     if (value == null) return 'N/A';

@@ -46,14 +46,14 @@ class ApiService {
     }
 
     try {
+      print('intent에 따른 API 요청 시도');
       // API 요청
       final url = Uri.parse('$baseUrl$path');
+      print('intent에 따른 API 호출 시도 함 url은?: $url');
 
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
-        print('데이터 요청 성공: ${response.body}');
-
         final fetchedData = json.decode(response.body);
 
         final name = data['name'];
@@ -61,14 +61,24 @@ class ApiService {
         final market = data['market'];
         final period = data['period'];
 
-        // 저장
-        IntentResultStore.set(
-          name_: name,
-          code_: code,
-          market_: market,
-          period_: period,
-          chartData: fetchedData,
-        );
+        // intent에 따라 저장
+        if (intent == 'chart') {
+          IntentResultStore.setChart(
+            name_: name,
+            code_: code,
+            market_: market,
+            period_: period,
+            chartData: fetchedData,
+          );
+        } else if (intent == 'indicator') {
+          print('indicator 데이터 요청 성공: ${fetchedData}');
+          IntentResultStore.setIndicator(
+            name_: name,
+            code_: code,
+            market_: market,
+            indicator: fetchedData,
+          );
+        }
 
         // intent에 따라 페이지 이동
         if (intent == 'chart') {

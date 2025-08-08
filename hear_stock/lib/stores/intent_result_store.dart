@@ -4,8 +4,9 @@ class IntentResultStore {
   static String? market;
   static String? period;
   static List<dynamic> chartJsonList = [];
+  static Map<String, dynamic> indicatorData = {};
 
-  static void set({
+  static void setChart({
     required String name_,
     required String code_,
     required String market_,
@@ -17,6 +18,20 @@ class IntentResultStore {
     market = market_;
     period = period_;
     chartJsonList = chartData;
+    indicatorData = {}; // chart intent면 indicator는 비움
+  }
+
+  static void setIndicator({
+    required String name_,
+    required String code_,
+    required String market_,
+    required Map<String, dynamic> indicator,
+  }) {
+    name = name_;
+    code = code_;
+    market = market_;
+    indicatorData = indicator;
+    chartJsonList = []; // indicator intent면 chart는 비움
   }
 
   static void clear() {
@@ -25,5 +40,6 @@ class IntentResultStore {
     market = null;
     period = null;
     chartJsonList = [];
+    indicatorData = {};
   }
 }
