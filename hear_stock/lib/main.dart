@@ -9,18 +9,8 @@ import 'ris_page.dart';
 import 'providers/intent_result_provider.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
-
-  print(dotenv.env['API_BASE_URL']);
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => IntentResultProvider()),
-      ],
-      child: MyApp(),
-    ),
-  );
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -30,7 +20,7 @@ class MyApp extends StatelessWidget {
       // 기본 폰트 Pretendard로 설정
       theme: ThemeData(fontFamily: "Pretendard"),
       // 초기 화면: LandingPage
-      initialRoute: '/',
+      initialRoute: '/home',
       routes: {
         '/': (context) => LandingPage(),
         '/home': (context) => HomePage(),
