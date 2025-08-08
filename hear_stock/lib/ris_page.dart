@@ -45,24 +45,38 @@ class _RsiPageState extends State<RsiPage> {
     _IndicatorItem(title: '외국인 소진율', backgroundColor: Color(0xff262626)),
   ];
 
+  final Map<String, String> metricMap = {
+    '시가총액': 'market_cap',
+    '배당수익률': 'dividend_yield',
+    'PBR': 'pbr',
+    'PER': 'per',
+    'ROE': 'roe',
+    'PSR': 'psr',
+    '외국인 소진율': 'foreign_ownership',
+  };
+
   @override
   void initState() {
     super.initState();
-    //fetchIndicatorValues(code: '005930', market: 'KR');
 
     final data = IntentResultStore.indicatorData;
 
     setState(() {
       indicatorValues = {
         '시가총액': _formatValue(data['market_cap'], unit: '원'),
-        '배당수익률': '${data['dividend_yield']}%',
-        'PBR': '${data['pbr']}배',
-        'PER': '${data['per']}배',
-        'ROE': '${data['roe']}%',
-        'PSR': '${data['psr']}배',
-        if (data.containsKey('foreign_ownership'))
+        '배당수익률':
+            data['dividend_yield'] != null
+                ? '${data['dividend_yield']}%'
+                : 'N/A',
+        'PBR': data['pbr'] != null ? '${data['pbr']}배' : 'N/A',
+        'PER': data['per'] != null ? '${data['per']}배' : 'N/A',
+        'ROE': data['roe'] != null ? '${data['roe']}%' : 'N/A',
+        'PSR': data['psr'] != null ? '${data['psr']}배' : 'N/A',
+        if (data.containsKey('foreign_ownership') &&
+            data['foreign_ownership'] != null)
           '외국인 소진율': '${data['foreign_ownership']}%',
       };
+      selectedValue = indicatorValues[selectedTitle] ?? '';
     });
 
     _scrollController.addListener(() {
@@ -83,47 +97,47 @@ class _RsiPageState extends State<RsiPage> {
     _voiceScrollHandler.startListening(
       context,
       onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),
-      onResult: (text) => setState(() => _recognizedText = text),
-      onEnd: (isActive) => setState(() => _isMicrophoneActive = isActive),
+      onResult: (text) {
+        // 인식 중간 결과는 화면에만 표시, TTS 실행은 하지 않음
+        setState(() => _recognizedText = text);
+      },
+      onEnd: (isActive) async {
+        setState(() => _isMicrophoneActive = isActive);
+
+        // 음성 인식이 끝난 후 최종 텍스트에 대해 명령 처리 및 TTS 실행
+        if (_recognizedText.isNotEmpty) {
+          await _onVoiceCommandRecognized(_recognizedText);
+        }
+      },
     );
   }
 
-  // Future<void> fetchIndicatorValues({
-  //   required String code,
-  //   required String market,
-  // }) async {
-  //   final baseUrl = dotenv.env['API_BASE_URL'];
-  //   final uri = Uri.parse('$baseUrl/api/indicator/?code=$code&market=$market');
+  Future<void> _onVoiceCommandRecognized(String text) async {
+    final lowerText = text.toLowerCase();
+    final stockName = (IntentResultStore.name ?? '').toLowerCase();
 
-  //   try {
-  //     final response = await http.get(uri);
-  //     if (response.statusCode == 200) {
-  //       final data = jsonDecode(response.body);
+    if (lowerText.contains('투자지표 보여줘') || lowerText.contains('투자지표 보여 줘')) {
+      setState(() {
+        selectedTitle = '시가총액';
+        selectedValue = indicatorValues[selectedTitle] ?? '';
+      });
+      await flutterTts.speak("");
+      return;
+    }
 
-  //       setState(() {
-  //         indicatorValues = {
-  //           '시가총액': _formatValue(data['market_cap'], unit: '원'),
-  //           '배당수익률': '${data['dividend_yield']}%',
-  //           'PBR': '${data['pbr']}배',
-  //           'PER': '${data['per']}배',
-  //           'ROE': '${data['roe']}%',
-  //           'PSR': '${data['psr']}배',
-  //           if (data.containsKey('foreign_ownership'))
-  //             '외국인 소진율': '${data['foreign_ownership']}%',
-  //         };
-  //         selectedValue = indicatorValues[selectedTitle] ?? '';
-  //       });
-  //     } else {
-  //       setState(() {
-  //         indicatorValues.updateAll((key, value) => '불러오기 실패');
-  //       });
-  //     }
-  //   } catch (e) {
-  //     setState(() {
-  //       indicatorValues.updateAll((key, value) => '에러 발생');
-  //     });
-  //   }
-  // }
+    for (var indicator in metricMap.keys) {
+      if (lowerText.contains(indicator.toLowerCase())) {
+        setState(() {
+          selectedTitle = indicator; // 선택된 버튼 상태 변경
+          selectedValue = indicatorValues[indicator] ?? '정보가 없습니다.';
+        });
+        await flutterTts.speak("$stockName의 $indicator 값은 $selectedValue 입니다.");
+        return;
+      }
+    }
+
+    await flutterTts.speak("");
+  }
 
   String _formatValue(dynamic value, {String unit = ''}) {
     if (value == null) return 'N/A';
@@ -141,8 +155,13 @@ class _RsiPageState extends State<RsiPage> {
 
   Future<String> fetchSummaryFromApi(String title) async {
     final baseUrl = dotenv.env['API_BASE_URL'];
+    final code = IntentResultStore.code;
+    final market = IntentResultStore.market;
+
+    final metricKey = metricMap[title] ?? title.toLowerCase();
+
     final uri = Uri.parse(
-      '$baseUrl/api/indicator/explain?code=005930&market=KR&metric=${title.toLowerCase()}',
+      '$baseUrl/api/indicator/explain?code=$code&market=$market&metric=$metricKey',
     );
 
     try {
@@ -308,7 +327,6 @@ class _RsiPageState extends State<RsiPage> {
               ],
             ),
           ),
-
           if (_isMicrophoneActive)
             MicOverlay(
               recognizedText: _recognizedText,
