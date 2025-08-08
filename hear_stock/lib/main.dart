@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
       // 기본 폰트 Pretendard로 설정
       theme: ThemeData(fontFamily: "Pretendard"),
       // 초기 화면: LandingPage
-      initialRoute: '/',
+      initialRoute: '/home',
       routes: {
         '/': (context) => LandingPage(),
         '/home': (context) => HomePage(),
