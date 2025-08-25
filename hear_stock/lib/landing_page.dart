@@ -36,6 +36,11 @@ class LandingPage extends StatelessWidget {
               },
               child: Text('Go to RIS Page'),
             ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => Navigator.pushNamed(context, '/settings'),
+              child: const Text('접근성 & 테마 설정'),
+            ),
           ],
         ),
       ),
