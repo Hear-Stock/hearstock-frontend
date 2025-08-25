@@ -15,6 +15,7 @@ class LandingPage extends StatelessWidget {
             _buildNavButton(context, "[홈] Home Page", '/home'),
             _buildNavButton(context, "[차트] Chart Page", '/chart'),
             _buildNavButton(context, "[투자지표] RSI Page", '/rsi'),
+            _buildNavButton(context, "[테마] Settings Page", '/settings'),
           ],
         ),
       ),
