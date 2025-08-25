@@ -4,9 +4,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'services/voice_scroll_handler.dart';
-import 'widgets/mic_overlay.dart';
-import './stores/intent_result_store.dart';
+import '../../services/voice_scroll_handler.dart';
+import '../../widgets/mic_overlay.dart';
+import '../../stores/intent_result_store.dart';
 
 class RsiPage extends StatefulWidget {
   @override

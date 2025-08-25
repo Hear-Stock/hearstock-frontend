@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+// 페이지 임포트 (랜딩, 홈)
 import 'landing_page.dart';
 import 'home_page.dart';
-import 'chartPage/chart_page.dart';
-import 'ris_page.dart';
+
+// 페이지 임포트
+import 'pages/chart/chart_page.dart';
+import 'pages/ris/ris_page.dart';
+import 'pages/developer/developer_page.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");
@@ -24,6 +28,7 @@ class MyApp extends StatelessWidget {
         '/home': (context) => HomePage(),
         '/chart': (context) => ChartPage(),
         '/rsi': (context) => RsiPage(),
+        '/dev': (context) => DeveloperPage(),
       },
     );
   }

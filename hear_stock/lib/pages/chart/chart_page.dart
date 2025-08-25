@@ -3,10 +3,10 @@ import 'components/graph/chart_graph.dart';
 import 'components/chart_timeline.dart';
 import 'components/chart_header.dart';
 
-import '../services/voice_scroll_handler.dart';
-import '../widgets/mic_overlay.dart';
-import '../services/stock_chart_service.dart';
-import '../stores/intent_result_store.dart';
+import '../../services/voice_scroll_handler.dart';
+import '../../widgets/mic_overlay.dart';
+import '../../services/stock_chart_service.dart';
+import '../../stores/intent_result_store.dart';
 
 class ChartPage extends StatefulWidget {
   @override

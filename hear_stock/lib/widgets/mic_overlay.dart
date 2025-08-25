@@ -46,7 +46,10 @@ class MicOverlay extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: onStop,
               icon: Icon(Icons.stop, size: 32),
-              label: Text("그만두기", style: TextStyle(fontSize: 18)),
+              label: Text(
+                "그만두기",
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
               style: ElevatedButton.styleFrom(
                 shape: CircleBorder(),
                 padding: EdgeInsets.all(50),

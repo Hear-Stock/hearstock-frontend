@@ -11,6 +11,13 @@ class LandingPage extends StatelessWidget {
           children: <Widget>[
             ElevatedButton(
               onPressed: () {
+                Navigator.pushNamed(context, '/dev');
+              },
+              child: Text('Go to Develop Page'),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
                 Navigator.pushNamed(context, '/home');
               },
               child: Text('Go to Home Page'),

@@ -5,7 +5,7 @@ import 'package:flutter_soloud/flutter_soloud.dart';
 
 //import 'chart_sonification.dart';
 import 'chart_painter.dart';
-import '../../../services/stock_chart_service.dart';
+import '../../../../services/stock_chart_service.dart';
 
 class ChartGraph extends StatefulWidget {
   final List<ChartData> data;
