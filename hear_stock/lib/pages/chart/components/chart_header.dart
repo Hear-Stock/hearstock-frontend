@@ -13,19 +13,17 @@ class ChartHeader extends StatelessWidget {
       children: [
         Text(
           headerTitle,
-          style: TextStyle(
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Colors.white, // 색상은 필요에 맞게 조정
           ),
         ),
         SizedBox(height: 8),
         Text(
           subtitle,
-          style: TextStyle(
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
           ),
         ),
       ],
