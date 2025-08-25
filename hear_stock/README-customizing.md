@@ -52,3 +52,6 @@ Text(
 color: Theme.of(
     context,
 ).colorScheme.onBackground.withOpacity(0.65),
+### FontSize 이렇게 설정하세요
+- 제목: 24
+- 설명: 18

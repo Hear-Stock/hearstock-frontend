@@ -194,6 +194,27 @@ class _HomePageState extends State<HomePage>
               recognizedText: _recognizedText,
               onStop: _stopListeningManually,
             ),
+
+          // 테마 설정 버튼 (톱니바퀴 아이콘)
+          if (!_isMicrophoneActive)
+            Positioned(
+              right: 16,
+              bottom: 24,
+              child: SafeArea(
+                child: SettingsBar(
+                  onOpenSettings:
+                      () => Navigator.of(context).pushNamed('/settings'),
+                  themeMode:
+                      Theme.of(context).brightness == Brightness.dark
+                          ? ThemeMode.dark
+                          : ThemeMode.light, // 예: 현재 모드 추정 (앱 전역 상태에 맞게 바꿔주세요)
+                  onThemeChanged: (mode) {
+                    // TODO: 앱 전역 상태(Provider/Bloc/GetX 등)로 연결해 실제 테마 변경
+                    // ex) context.read<AppTheme>().setThemeMode(mode);
+                  },
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -201,6 +222,130 @@ class _HomePageState extends State<HomePage>
 }
 
 /* ------------------------------- UI 파츠 ------------------------------- */
+
+class SettingsBar extends StatelessWidget {
+  final VoidCallback onOpenSettings;
+  final ThemeMode themeMode;
+  final ValueChanged<ThemeMode> onThemeChanged;
+
+  const SettingsBar({
+    super.key,
+    required this.onOpenSettings,
+    required this.themeMode,
+    required this.onThemeChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    IconData themeIcon;
+    String themeLabel;
+    switch (themeMode) {
+      case ThemeMode.system:
+        themeIcon = Icons.brightness_auto_rounded;
+        themeLabel = '시스템';
+        break;
+      case ThemeMode.light:
+        themeIcon = Icons.wb_sunny_rounded;
+        themeLabel = '라이트';
+        break;
+      case ThemeMode.dark:
+        themeIcon = Icons.nightlight_round_rounded;
+        themeLabel = '다크';
+        break;
+    }
+
+    return Material(
+      color: cs.surface.withOpacity(0.72),
+      elevation: 2,
+      shape: const StadiumBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 왼쪽: 설정
+          _PillButton(
+            tooltip: '테마 변경',
+            icon: Icons.settings_outlined,
+            label: '테마',
+            onTap: onOpenSettings,
+          ),
+
+          // 구분선
+          Container(
+            width: 1,
+            height: 24,
+            color: cs.onSurface.withOpacity(0.12),
+          ),
+
+          // 오른쪽: 테마 토글 (system → light → dark 순환)
+          _PillButton(
+            tooltip: '모드 변경',
+            icon: themeIcon,
+            label: themeLabel,
+            onTap: () => onThemeChanged(_nextTheme(themeMode)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  ThemeMode _nextTheme(ThemeMode m) {
+    switch (m) {
+      case ThemeMode.system:
+        return ThemeMode.light;
+      case ThemeMode.light:
+        return ThemeMode.dark;
+      case ThemeMode.dark:
+        return ThemeMode.system;
+    }
+  }
+}
+
+class _PillButton extends StatelessWidget {
+  final String tooltip;
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _PillButton({
+    required this.tooltip,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return InkWell(
+      onTap: onTap,
+      child: Tooltip(
+        message: tooltip,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: cs.onSurface.withOpacity(0.92)),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: tt.labelLarge?.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: cs.onSurface.withOpacity(0.9),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _HintCard extends StatelessWidget {
   @override
