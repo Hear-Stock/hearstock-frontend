@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'app_settings.dart';
+import '../../app_settings.dart';
 
 class SettingsPage extends StatelessWidget {
   final AppSettings settings;
