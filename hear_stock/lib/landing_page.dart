@@ -1,48 +1,36 @@
 import 'package:flutter/material.dart';
 
 class LandingPage extends StatelessWidget {
+  const LandingPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Landing Page")),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/dev');
-              },
-              child: Text('Go to Develop Page'),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/home');
-              },
-              child: Text('Go to Home Page'),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/chart');
-              },
-              child: Text('Go to Chart Page'),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/rsi');
-              },
-              child: Text('Go to RIS Page'),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => Navigator.pushNamed(context, '/settings'),
-              child: const Text('접근성 & 테마 설정'),
-            ),
+      appBar: AppBar(title: const Text("Landing Page")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ListView(
+          children: [
+            _buildNavButton(context, "Landing Page", '/'),
+            _buildNavButton(context, "[홈] Home Page", '/home'),
+            _buildNavButton(context, "[차트] Chart Page", '/chart'),
+            _buildNavButton(context, "[투자지표] RSI Page", '/rsi'),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildNavButton(BuildContext context, String title, String route) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          minimumSize: const Size(double.infinity, 50), // 가로 꽉 차는 버튼
+          textStyle: const TextStyle(fontSize: 16),
+        ),
+        onPressed: () => Navigator.pushNamed(context, route),
+        child: Text(title),
       ),
     );
   }

@@ -12,9 +12,9 @@ class DeveloperPage extends StatelessWidget {
         child: ListView(
           children: [
             _buildNavButton(context, "Landing Page", '/'),
-            _buildNavButton(context, "Home Page", '/home'),
-            _buildNavButton(context, "Chart Page", '/chart'),
-            _buildNavButton(context, "RSI Page", '/rsi'),
+            _buildNavButton(context, "[홈] Home Page", '/home'),
+            _buildNavButton(context, "[차트] Chart Page", '/chart'),
+            _buildNavButton(context, "[투자지표] RSI Page", '/rsi'),
           ],
         ),
       ),
