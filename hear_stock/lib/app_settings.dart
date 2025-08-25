@@ -151,8 +151,8 @@ class AppSettings extends ChangeNotifier {
       case CvdPreset.defaultDark:
         backgroundColor = const Color(0xFF262626);
         fontColor = const Color(0xFFFFFFFF);
-        buttonBgColor = const Color(0xFF4E9BFF);
-        buttonFgColor = Colors.white;
+        buttonBgColor = const Color(0xFFFFFFFF);
+        buttonFgColor = const Color(0xFF262626);
         break;
 
       case CvdPreset.highContrastDark:
