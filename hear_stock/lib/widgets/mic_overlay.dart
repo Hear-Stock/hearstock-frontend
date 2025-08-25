@@ -20,15 +20,16 @@ class MicOverlay extends StatelessWidget {
           children: [
             Text(
               '음성 대화 중',
-              style: TextStyle(color: Colors.white, fontSize: 18),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontSize: 18),
             ),
             SizedBox(height: 20),
             Icon(Icons.mic, size: 100, color: Colors.white),
             SizedBox(height: 20),
             Text(
               '듣고 있어요',
-              style: TextStyle(
-                color: Colors.white,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
@@ -36,10 +37,9 @@ class MicOverlay extends StatelessWidget {
             SizedBox(height: 10),
             Text(
               '인식된 텍스트: $recognizedText',
-              style: TextStyle(
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
               ),
             ),
             SizedBox(height: 40),
@@ -48,7 +48,9 @@ class MicOverlay extends StatelessWidget {
               icon: Icon(Icons.stop, size: 32),
               label: Text(
                 "그만두기",
-                style: TextStyle(fontSize: 18, color: Colors.white),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontSize: 18),
               ),
               style: ElevatedButton.styleFrom(
                 shape: CircleBorder(),
