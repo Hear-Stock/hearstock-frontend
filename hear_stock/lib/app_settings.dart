@@ -69,23 +69,23 @@ class AppSettings extends ChangeNotifier {
     switch (p) {
       case CvdPreset.defaultDark:
         backgroundColor = const Color(0xFF262626);
-        fontColor = Colors.white;
+        fontColor = const Color(0xFFFFFFFF);
         break;
       case CvdPreset.highContrastDark:
-        backgroundColor = Colors.black;
-        fontColor = Colors.white;
+        backgroundColor = const Color(0xFF000000);
+        fontColor = const Color(0xFFFFFFFF);
         break;
       case CvdPreset.protanopiaFriendly:
-        backgroundColor = const Color(0xFF1E1E1E);
-        fontColor = const Color(0xFFF2F2F2);
+        backgroundColor = const Color(0xFF000000);
+        fontColor = const Color(0xFF00ffff);
         break;
       case CvdPreset.deuteranopiaFriendly:
-        backgroundColor = const Color(0xFF202124);
-        fontColor = const Color(0xFFFFFBFE);
+        backgroundColor = const Color(0xFF000000);
+        fontColor = const Color(0xFFffd700);
         break;
       case CvdPreset.tritanopiaFriendly:
-        backgroundColor = const Color(0xFF1C1C1C);
-        fontColor = const Color(0xFFFFF3E0);
+        backgroundColor = const Color(0xFF000000);
+        fontColor = const Color(0xFFff00ff);
         break;
       case CvdPreset.monochrome:
         backgroundColor = const Color(0xFF111111);
