@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 
 class ChartTimeline extends StatelessWidget {
   final String selectedTimeline; // 현재 선택된 시간
-  final Function(String) onTimelineChanged; // 버튼 클릭 시 상태 변경 함수
+  final ValueChanged<String> onTimelineChanged; // 버튼 클릭 시 상태 변경 함수
 
-  ChartTimeline({
+  const ChartTimeline({
+    super.key,
     required this.selectedTimeline,
     required this.onTimelineChanged,
   });
@@ -13,67 +14,62 @@ class ChartTimeline extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // 상단 메인 버튼: 전역 FilledButton 테마 그대로 사용
         SizedBox(
           width: MediaQuery.of(context).size.width * 0.8,
-          child: TextButton(
+          child: FilledButton(
             onPressed: () {},
-            child: Text(
-              '실시간',
-              style: TextStyle(fontSize: 18, color: Colors.black),
-            ),
-            style: TextButton.styleFrom(
-              backgroundColor: Colors.white,
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6),
               ),
-              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             ),
+            child: const Text('실시간', style: TextStyle(fontSize: 18)),
           ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
+
+        // 타임라인 선택 버튼 그룹
         Wrap(
-          spacing: 4, // 버튼 간 간격
-          runSpacing: 4, // 줄 간 간격
-          alignment: WrapAlignment.center, // 버튼들을 가운데 정렬
-          children: <Widget>[
-            _buildTimelineButton("3달"),
-            _buildTimelineButton("1년"),
-            _buildTimelineButton("5년"),
-            _buildTimelineButton("10년"),
-          ],
+          spacing: 4,
+          runSpacing: 4,
+          alignment: WrapAlignment.center,
+          children:
+              <String>[
+                '3달',
+                '1년',
+                '5년',
+                '10년',
+              ].map((t) => _buildTimelineButton(context, t)).toList(),
         ),
       ],
     );
   }
 
-  // 버튼을 생성하는 헬퍼 함수
-  Widget _buildTimelineButton(String timeline) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 1),
-      child: TextButton(
-        onPressed: () {
-          onTimelineChanged(timeline); // 버튼 클릭 시 콜백 실행
-        },
+  // 선택 상태에 따라 Filled / Outlined로 분기
+  Widget _buildTimelineButton(BuildContext context, String timeline) {
+    final selected = selectedTimeline == timeline;
+    final pad = const EdgeInsets.symmetric(horizontal: 10, vertical: 6);
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(6),
+    );
+
+    if (selected) {
+      return FilledButton(
+        onPressed: () => onTimelineChanged(timeline),
+        style: FilledButton.styleFrom(padding: pad, shape: shape),
         child: Text(
           timeline,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight:
-                selectedTimeline == timeline
-                    ? FontWeight.bold
-                    : FontWeight.normal,
-            color: selectedTimeline == timeline ? Colors.white : Colors.black,
-          ),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
-        style: TextButton.styleFrom(
-          backgroundColor:
-              selectedTimeline == timeline ? Colors.orange : Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6), // 둥근 버튼
-          ),
-          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5), // 버튼 크기
-        ),
-      ),
-    );
+      );
+    } else {
+      return OutlinedButton(
+        onPressed: () => onTimelineChanged(timeline),
+        style: OutlinedButton.styleFrom(padding: pad, shape: shape),
+        child: Text(timeline, style: const TextStyle(fontSize: 16)),
+      );
+    }
   }
 }
