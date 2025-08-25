@@ -3,7 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // 페이지 임포트 (랜딩, 홈)
 import 'landing_page.dart';
-import 'home_page.dart';
+import 'pages/home/home_page.dart';
 import 'pages/settings/settings_page.dart';
 import 'app_settings.dart';
 

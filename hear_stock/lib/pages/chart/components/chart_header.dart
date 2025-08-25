@@ -4,26 +4,34 @@ class ChartHeader extends StatelessWidget {
   final String headerTitle;
   final String subtitle;
 
-  ChartHeader({required this.headerTitle, required this.subtitle});
+  const ChartHeader({
+    super.key,
+    required this.headerTitle,
+    required this.subtitle,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           headerTitle,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+          style: tt.headlineSmall?.copyWith(
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Text(
           subtitle,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+          style: tt.titleMedium?.copyWith(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: cs.onBackground.withOpacity(0.9),
           ),
         ),
       ],

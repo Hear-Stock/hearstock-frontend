@@ -88,7 +88,7 @@ class SettingsPage extends StatelessWidget {
                 SizedBox(height: 8),
                 Text(
                   '이 텍스트는 현재 설정된 글자 배율과 색상으로 표시됩니다.',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
                 ),
               ],
             ),
