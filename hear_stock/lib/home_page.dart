@@ -67,7 +67,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       Text(
-                        '아래로 스크롤해서 마이크를 작동시켜 물어보세요!',
+                        '아래로 스크롤해서\n마이크를 작동시켜 물어보세요!',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
