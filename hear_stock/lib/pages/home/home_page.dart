@@ -1,23 +1,19 @@
 import 'package:flutter/material.dart';
 import '../../services/voice_scroll_handler.dart';
 import '../../widgets/mic_overlay.dart';
+import '../../widgets/mic_hint.dart';
 
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage>
-    with SingleTickerProviderStateMixin {
+class _HomePageState extends State<HomePage> {
   bool _isMicrophoneActive = false;
   String _recognizedText = "";
 
   final VoiceScrollHandler _voiceScrollHandler = VoiceScrollHandler();
   final ScrollController _scrollController = ScrollController();
-
-  late final AnimationController _arrowCtrl;
-  late final Animation<double> _arrowDy; // 아래로 살짝 이동
-  late final Animation<double> _arrowOpacity; // 은은한 깜빡임
 
   @override
   void initState() {
@@ -28,27 +24,10 @@ class _HomePageState extends State<HomePage>
         _stopListeningManually();
       }
     });
-
-    // 스크롤 힌트 애니메이션
-    _arrowCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat(reverse: true);
-
-    _arrowDy = Tween<double>(
-      begin: 0,
-      end: 8,
-    ).animate(CurvedAnimation(parent: _arrowCtrl, curve: Curves.easeInOut));
-
-    _arrowOpacity = Tween<double>(
-      begin: 0.55,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _arrowCtrl, curve: Curves.easeInOut));
   }
 
   @override
   void dispose() {
-    _arrowCtrl.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -123,48 +102,7 @@ class _HomePageState extends State<HomePage>
                 // 스크롤 힌트 애니메이션
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Center(
-                    child: AnimatedBuilder(
-                      animation: _arrowCtrl,
-                      builder: (context, _) {
-                        return Opacity(
-                          opacity: _arrowOpacity.value,
-                          child: Transform.translate(
-                            offset: Offset(0, _arrowDy.value),
-                            child: Column(
-                              children: [
-                                Container(
-                                  width: 56,
-                                  height: 56,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: cs.onBackground.withOpacity(0.6),
-                                      width: 1.5,
-                                    ),
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Icon(
-                                    Icons.keyboard_arrow_down_rounded,
-                                    size: 32,
-                                    color: cs.onBackground,
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  '아래로 스크롤하면 음성이 시작됩니다',
-                                  style: tt.bodyMedium?.copyWith(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                  child: const MicHint(), // 기본 문구/사이즈 사용
                 ),
 
                 const SizedBox(height: 24),
