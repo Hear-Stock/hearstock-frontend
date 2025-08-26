@@ -61,3 +61,26 @@ color: Theme.of(
 ### 2-4. FontSize 이렇게 설정하세요
 - 제목: 24
 - 설명: 18
+
+## 3. Button Color
+이건 사실 나도 왜 되는지 모름
+
+```dart
+// 선택되었을 때 (FilledButton)
+if (selected) {
+  return FilledButton(
+    onPressed: () => onTimelineChanged(timeline),
+    style: FilledButton.styleFrom(padding: pad, shape: shape),
+    child: Text(
+      timeline,
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+    ),
+  );
+}
+// 외곽 버튼 (OutlinedButton)
+return OutlinedButton(
+  onPressed: () => onTimelineChanged(timeline),
+  style: OutlinedButton.styleFrom(padding: pad, shape: shape),
+  child: Text(timeline, style: const TextStyle(fontSize: 16)),
+);
+```
