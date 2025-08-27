@@ -15,7 +15,6 @@ class RsiPage extends StatefulWidget {
 
 class _RsiPageState extends State<RsiPage> {
   final FlutterTts flutterTts = FlutterTts();
-
   bool _isMicrophoneActive = false;
   String _recognizedText = "";
 
@@ -58,32 +57,47 @@ class _RsiPageState extends State<RsiPage> {
   @override
   void initState() {
     super.initState();
-
-    final data = IntentResultStore.indicatorData;
-
-    setState(() {
-      indicatorValues = {
-        '시가총액': _formatValue(data['market_cap'], unit: '원'),
-        '배당수익률':
-            data['dividend_yield'] != null
-                ? '${data['dividend_yield']}%'
-                : 'N/A',
-        'PBR': data['pbr'] != null ? '${data['pbr']}배' : 'N/A',
-        'PER': data['per'] != null ? '${data['per']}배' : 'N/A',
-        'ROE': data['roe'] != null ? '${data['roe']}%' : 'N/A',
-        'PSR': data['psr'] != null ? '${data['psr']}배' : 'N/A',
-        if (data.containsKey('foreign_ownership') &&
-            data['foreign_ownership'] != null)
-          '외국인 소진율': '${data['foreign_ownership']}%',
-      };
-      selectedValue = indicatorValues[selectedTitle] ?? '';
-    });
+    _fetchIndicatorData();
 
     _scrollController.addListener(() {
-      if (_isMicrophoneActive) {
-        _stopListeningManually();
-      }
+      if (_isMicrophoneActive) _stopListeningManually();
     });
+  }
+
+  /// API 호출
+  Future<void> _fetchIndicatorData() async {
+    final baseUrl = dotenv.env['API_BASE_URL'];
+    final code = IntentResultStore.code;
+    final market = IntentResultStore.market;
+    if (code == null || market == null) return;
+
+    final uri = Uri.parse('$baseUrl/api/indicator?code=$code&market=$market');
+
+    try {
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          indicatorValues = {
+            '시가총액': _formatValue(data['market_cap'], unit: '원'),
+            '배당수익률':
+                data['dividend_yield'] != null
+                    ? '${data['dividend_yield']}%'
+                    : 'N/A',
+            'PBR': data['pbr'] != null ? '${data['pbr']}배' : 'N/A',
+            'PER': data['per'] != null ? '${data['per']}배' : 'N/A',
+            'ROE': data['roe'] != null ? '${data['roe']}%' : 'N/A',
+            'PSR': data['psr'] != null ? '${data['psr']}배' : 'N/A',
+            if (data.containsKey('foreign_ownership') &&
+                data['foreign_ownership'] != null)
+              '외국인 소진율': '${data['foreign_ownership']}%',
+          };
+          selectedValue = indicatorValues[selectedTitle] ?? '';
+        });
+      }
+    } catch (e) {
+      print("지표 데이터 로드 실패: $e");
+    }
   }
 
   void _stopListeningManually() {
@@ -97,25 +111,41 @@ class _RsiPageState extends State<RsiPage> {
     _voiceScrollHandler.startListening(
       context,
       onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),
-      onResult: (text) {
-        // 인식 중간 결과는 화면에만 표시, TTS 실행은 하지 않음
-        setState(() => _recognizedText = text);
-      },
+      onResult: (text) => setState(() => _recognizedText = text),
       onEnd: (isActive) async {
         setState(() => _isMicrophoneActive = isActive);
-
-        // 음성 인식이 끝난 후 최종 텍스트에 대해 명령 처리 및 TTS 실행
-        if (_recognizedText.isNotEmpty) {
+        if (_recognizedText.isNotEmpty)
           await _onVoiceCommandRecognized(_recognizedText);
-        }
       },
     );
   }
 
+  /// 🔹 음성 명령 처리 + UI 갱신 (종목명 포함 가능)
   Future<void> _onVoiceCommandRecognized(String text) async {
     final lowerText = text.toLowerCase();
-    final stockName = (IntentResultStore.name ?? '').toLowerCase();
 
+    // 1️⃣ 종목명 변경 처리
+    final newStockCode =
+        IntentResultStore.code; // 이미 IntentResultStore에 새 코드가 들어온 경우 그대로 사용
+    if (newStockCode != null) {
+      await _fetchIndicatorData(); // 새 종목 데이터 로드 후 indicatorValues 갱신
+    }
+
+    // 2️⃣ 지표 처리
+    for (var indicator in metricMap.keys) {
+      if (lowerText.contains(indicator.toLowerCase())) {
+        setState(() {
+          selectedTitle = indicator;
+          selectedValue = indicatorValues[indicator] ?? '정보가 없습니다.';
+        });
+        await flutterTts.speak(
+          "${IntentResultStore.name}의 $indicator 값은 $selectedValue 입니다.",
+        );
+        return;
+      }
+    }
+
+    // 3️⃣ "투자지표 보여줘" 처리
     if (lowerText.contains('투자지표 보여줘') || lowerText.contains('투자지표 보여 줘')) {
       setState(() {
         selectedTitle = '시가총액';
@@ -125,41 +155,24 @@ class _RsiPageState extends State<RsiPage> {
       return;
     }
 
-    for (var indicator in metricMap.keys) {
-      if (lowerText.contains(indicator.toLowerCase())) {
-        setState(() {
-          selectedTitle = indicator; // 선택된 버튼 상태 변경
-          selectedValue = indicatorValues[indicator] ?? '정보가 없습니다.';
-        });
-        await flutterTts.speak("$stockName의 $indicator 값은 $selectedValue 입니다.");
-        return;
-      }
-    }
-
-    await flutterTts.speak("");
+    await flutterTts.speak("해당 지표를 찾을 수 없습니다.");
   }
 
   String _formatValue(dynamic value, {String unit = ''}) {
     if (value == null) return 'N/A';
     double numValue = double.tryParse(value.toString()) ?? 0;
-    if (numValue >= 1e12) {
+    if (numValue >= 1e12)
       return '${(numValue / 1e12).toStringAsFixed(1)}조$unit';
-    } else if (numValue >= 1e8) {
-      return '${(numValue / 1e8).toStringAsFixed(1)}억$unit';
-    } else if (numValue >= 1e4) {
-      return '${(numValue / 1e4).toStringAsFixed(1)}만$unit';
-    } else {
-      return '${numValue.toStringAsFixed(0)}$unit';
-    }
+    if (numValue >= 1e8) return '${(numValue / 1e8).toStringAsFixed(1)}억$unit';
+    if (numValue >= 1e4) return '${(numValue / 1e4).toStringAsFixed(1)}만$unit';
+    return '${numValue.toStringAsFixed(0)}$unit';
   }
 
   Future<String> fetchSummaryFromApi(String title) async {
     final baseUrl = dotenv.env['API_BASE_URL'];
     final code = IntentResultStore.code;
     final market = IntentResultStore.market;
-
     final metricKey = metricMap[title] ?? title.toLowerCase();
-
     final uri = Uri.parse(
       '$baseUrl/api/indicator/explain?code=$code&market=$market&metric=$metricKey',
     );
@@ -251,7 +264,6 @@ class _RsiPageState extends State<RsiPage> {
                               )
                               .map((item) {
                                 final isSelected = item.title == selectedTitle;
-
                                 return Semantics(
                                   label:
                                       '${item.title} 버튼${isSelected ? ', 선택됨' : ''}',
