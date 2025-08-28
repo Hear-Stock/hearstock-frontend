@@ -222,7 +222,10 @@ class SettingsBar extends StatelessWidget {
             tooltip: '모드 변경',
             icon: themeIcon,
             label: themeLabel,
-            onTap: () => onThemeChanged(_nextTheme(themeMode)),
+            onTap:
+                () => Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil('/', (route) => false),
           ),
         ],
       ),
