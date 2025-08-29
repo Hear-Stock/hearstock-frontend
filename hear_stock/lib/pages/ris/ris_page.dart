@@ -1,3 +1,4 @@
+// pages/ris/ris_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'dart:convert';
@@ -8,19 +9,26 @@ import '../../services/voice_scroll_handler.dart';
 import '../../widgets/mic_overlay.dart';
 import '../../stores/intent_result_store.dart';
 
+// ▶ 새로 만든 컴포넌트 임포트
+import 'components/header_card.dart';
+import 'components/indicator_list.dart';
+import 'indicator_detail_page.dart';
+
 class RsiPage extends StatefulWidget {
   @override
   _RsiPageState createState() => _RsiPageState();
 }
 
 class _RsiPageState extends State<RsiPage> {
+  // ----- 음성/TTS/스크롤 -----
   final FlutterTts flutterTts = FlutterTts();
-  bool _isMicrophoneActive = false;
-  String _recognizedText = "";
-
   final VoiceScrollHandler _voiceScrollHandler = VoiceScrollHandler();
   final ScrollController _scrollController = ScrollController();
 
+  bool _isMicrophoneActive = false;
+  String _recognizedText = "";
+
+  // ----- 선택/지표 상태 -----
   String selectedTitle = '시가총액';
   String selectedValue = '';
 
@@ -34,7 +42,8 @@ class _RsiPageState extends State<RsiPage> {
     '외국인 소진율': '',
   };
 
-  final List<_IndicatorItem> items = [
+  // (제목만 활용, 색상은 테마 사용)
+  final List<_IndicatorItem> items = const [
     _IndicatorItem(title: '시가총액', backgroundColor: Color(0xff262626)),
     _IndicatorItem(title: '배당수익률', backgroundColor: Color(0xff262626)),
     _IndicatorItem(title: 'PBR', backgroundColor: Color(0xff262626)),
@@ -44,7 +53,7 @@ class _RsiPageState extends State<RsiPage> {
     _IndicatorItem(title: '외국인 소진율', backgroundColor: Color(0xff262626)),
   ];
 
-  final Map<String, String> metricMap = {
+  final Map<String, String> metricMap = const {
     '시가총액': 'market_cap',
     '배당수익률': 'dividend_yield',
     'PBR': 'pbr',
@@ -58,18 +67,24 @@ class _RsiPageState extends State<RsiPage> {
   void initState() {
     super.initState();
     _fetchIndicatorData();
-
     _scrollController.addListener(() {
       if (_isMicrophoneActive) _stopListeningManually();
     });
   }
 
-  /// API 호출
+  @override
+  void dispose() {
+    flutterTts.stop();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  // ----- 데이터 로드 -----
   Future<void> _fetchIndicatorData() async {
     final baseUrl = dotenv.env['API_BASE_URL'];
     final code = IntentResultStore.code;
     final market = IntentResultStore.market;
-    if (code == null || market == null) return;
+    if (baseUrl == null || code == null || market == null) return;
 
     final uri = Uri.parse('$baseUrl/api/indicator?code=$code&market=$market');
 
@@ -96,10 +111,11 @@ class _RsiPageState extends State<RsiPage> {
         });
       }
     } catch (e) {
-      print("지표 데이터 로드 실패: $e");
+      debugPrint("지표 데이터 로드 실패: $e");
     }
   }
 
+  // ----- 음성 제어 -----
   void _stopListeningManually() {
     _voiceScrollHandler.stopImmediately(
       context,
@@ -120,18 +136,14 @@ class _RsiPageState extends State<RsiPage> {
     );
   }
 
-  /// 🔹 음성 명령 처리 + UI 갱신 (종목명 포함 가능)
   Future<void> _onVoiceCommandRecognized(String text) async {
     final lowerText = text.toLowerCase();
 
-    // 1️⃣ 종목명 변경 처리
-    final newStockCode =
-        IntentResultStore.code; // 이미 IntentResultStore에 새 코드가 들어온 경우 그대로 사용
+    final newStockCode = IntentResultStore.code;
     if (newStockCode != null) {
-      await _fetchIndicatorData(); // 새 종목 데이터 로드 후 indicatorValues 갱신
+      await _fetchIndicatorData();
     }
 
-    // 2️⃣ 지표 처리
     for (var indicator in metricMap.keys) {
       if (lowerText.contains(indicator.toLowerCase())) {
         setState(() {
@@ -145,7 +157,6 @@ class _RsiPageState extends State<RsiPage> {
       }
     }
 
-    // 3️⃣ "투자지표 보여줘" 처리
     if (lowerText.contains('투자지표 보여줘') || lowerText.contains('투자지표 보여 줘')) {
       setState(() {
         selectedTitle = '시가총액';
@@ -158,9 +169,10 @@ class _RsiPageState extends State<RsiPage> {
     await flutterTts.speak("해당 지표를 찾을 수 없습니다.");
   }
 
+  // ----- 헬퍼 -----
   String _formatValue(dynamic value, {String unit = ''}) {
     if (value == null) return 'N/A';
-    double numValue = double.tryParse(value.toString()) ?? 0;
+    final numValue = double.tryParse(value.toString()) ?? 0;
     if (numValue >= 1e12)
       return '${(numValue / 1e12).toStringAsFixed(1)}조$unit';
     if (numValue >= 1e8) return '${(numValue / 1e8).toStringAsFixed(1)}억$unit';
@@ -173,6 +185,10 @@ class _RsiPageState extends State<RsiPage> {
     final code = IntentResultStore.code;
     final market = IntentResultStore.market;
     final metricKey = metricMap[title] ?? title.toLowerCase();
+    if (baseUrl == null || code == null || market == null) {
+      return '$title 정보를 불러오는 데 실패했습니다.';
+    }
+
     final uri = Uri.parse(
       '$baseUrl/api/indicator/explain?code=$code&market=$market&metric=$metricKey',
     );
@@ -199,146 +215,79 @@ class _RsiPageState extends State<RsiPage> {
   }
 
   Future<void> _onIndicatorLongPressed(String title) async {
-    String summary = await fetchSummaryFromApi(title);
+    final summary = await fetchSummaryFromApi(title);
     await flutterTts.speak(summary);
   }
 
-  @override
-  void dispose() {
-    flutterTts.stop();
-    super.dispose();
-  }
-
+  // ----- UI -----
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     final textScale = MediaQuery.of(context).textScaleFactor;
 
+    // 버튼에 쓸 제목 목록 (데이터가 있는 항목만)
+    final titles =
+        items
+            .where((item) => indicatorValues.containsKey(item.title))
+            .map((e) => e.title)
+            .toList();
+
     return Scaffold(
-      backgroundColor: Color(0xff262626),
+      backgroundColor: cs.background,
       body: Stack(
         children: [
           RefreshIndicator(
             onRefresh: _onRefresh,
             child: ListView(
               controller: _scrollController,
-              physics: AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(30, 60, 30, 30),
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Semantics(
-                      header: true,
-                      child: Text(
-                        selectedTitle,
-                        style: TextStyle(
-                          fontSize: 22 * textScale,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                // 상단 선택 지표 카드
+                HeaderCard(
+                  title: selectedTitle,
+                  value: selectedValue,
+                  semanticsLabelValue: '$selectedTitle, $selectedValue',
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      IndicatorDetailPage.route, // '/rsi/detail'
+                      arguments: IndicatorDetailArgs(
+                        metricTitle: selectedTitle,
+                        currentValue: selectedValue,
                       ),
-                    ),
-                    Text(
-                      selectedValue,
-                      style: TextStyle(
-                        fontSize: 34 * textScale,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(height: 30),
-                    GridView(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 200,
-                        crossAxisSpacing: 20,
-                        mainAxisSpacing: 20,
-                        childAspectRatio: 1.2,
-                      ),
-                      children:
-                          items
-                              .where(
-                                (item) =>
-                                    indicatorValues.containsKey(item.title),
-                              )
-                              .map((item) {
-                                final isSelected = item.title == selectedTitle;
-                                return Semantics(
-                                  label:
-                                      '${item.title} 버튼${isSelected ? ', 선택됨' : ''}',
-                                  button: true,
-                                  selected: isSelected,
-                                  child: Tooltip(
-                                    message: '${item.title} 선택',
-                                    child: ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: item.backgroundColor,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            16,
-                                          ),
-                                          side: BorderSide(
-                                            color: Colors.white,
-                                            width: 3.5,
-                                          ),
-                                        ),
-                                      ),
-                                      onPressed:
-                                          () => _onIndicatorPressed(item.title),
-                                      onLongPress:
-                                          () => _onIndicatorLongPressed(
-                                            item.title,
-                                          ),
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            item.title,
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                              fontSize: 22 * textScale,
-                                              fontWeight: FontWeight.w900,
-                                            ),
-                                          ),
-                                          if (isSelected)
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                top: 8.0,
-                                              ),
-                                              child: Icon(
-                                                Icons.check_circle,
-                                                size: 20 * textScale,
-                                                color: Colors.white,
-                                                semanticLabel: '선택됨',
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              })
-                              .toList(),
-                    ),
-                    SizedBox(height: 10),
-                    Center(
-                      child: Text(
-                        '아래로 스크롤해서 마이크를 작동시키세요.',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 15 * textScale,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
+                const SizedBox(height: 20),
+
+                // ✅ 지표 선택: “가로로 긴 버튼”을 세로로 나열
+                IndicatorList(
+                  titles: titles,
+                  selectedTitle: selectedTitle,
+                  onPressed: _onIndicatorPressed,
+                  onLongPressed: _onIndicatorLongPressed,
+                ),
+
+                const SizedBox(height: 16),
+
+                // 하단 안내
+                Center(
+                  child: Text(
+                    '아래로 스크롤하면 음성이 시작됩니다.',
+                    textAlign: TextAlign.center,
+                    style: tt.bodyMedium?.copyWith(
+                      fontSize: 18 * textScale,
+                      color: cs.onBackground.withOpacity(0.75),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 48),
               ],
             ),
           ),
+
           if (_isMicrophoneActive)
             MicOverlay(
               recognizedText: _recognizedText,
@@ -350,9 +299,9 @@ class _RsiPageState extends State<RsiPage> {
   }
 }
 
+/* ───────────────────────── 내부 모델 ───────────────────────── */
 class _IndicatorItem {
   final String title;
-  final Color backgroundColor;
-
-  _IndicatorItem({required this.title, required this.backgroundColor});
+  final Color backgroundColor; // (디자인은 테마 사용. 호환 위해 남김)
+  const _IndicatorItem({required this.title, required this.backgroundColor});
 }
