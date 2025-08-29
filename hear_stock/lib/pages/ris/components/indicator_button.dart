@@ -33,7 +33,7 @@ class IndicatorButton extends StatelessWidget {
           child: Text(
             title,
             // 색은 버튼의 foregroundColor에 맡긴다 (직접 color 지정 X)
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -58,7 +58,6 @@ class IndicatorButton extends StatelessWidget {
             minimumSize: minSize,
             padding: pad,
             shape: shape,
-            // 색 지정하지 않음 → 전역 FilledButtonTheme 사용
           ),
           child: rowChild,
         ),
@@ -76,7 +75,7 @@ class IndicatorButton extends StatelessWidget {
           shape: shape,
           side: BorderSide(color: cs.onSurface.withOpacity(0.35), width: 1.4),
         ),
-        child: rowChild, // ← 비선택도 동일한 Row 사용
+        child: rowChild,
       ),
     );
   }
