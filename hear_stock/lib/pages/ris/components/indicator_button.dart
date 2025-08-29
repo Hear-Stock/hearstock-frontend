@@ -18,33 +18,33 @@ class IndicatorButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
 
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(12),
     );
-    const minSize = Size(double.infinity, 64); // 가로 꽉 + 충분한 터치 타깃
+    const minSize = Size(double.infinity, 64);
     const pad = EdgeInsets.symmetric(horizontal: 16, vertical: 14);
 
-    final label = Text(
-      title,
-      style: tt.titleMedium?.copyWith(
-        fontSize: 20,
-        fontWeight: FontWeight.w800,
-      ),
-    );
-
-    final trailing = Icon(
-      Icons.check_circle,
-      size: 22,
-      color: selected ? cs.onPrimary : cs.onSurface.withOpacity(0.4),
-      semanticLabel: selected ? '선택됨' : null,
-    );
-
-    final child = Row(
+    // ✅ 양쪽 상태에서 동일한 레이아웃 사용 (텍스트는 좌측, 아이콘은 우측)
+    //    선택 해제 시에도 아이콘 공간을 유지해 텍스트 흔들림 방지
+    final rowChild = Row(
       children: [
-        Expanded(child: label),
-        if (selected) trailing, // 선택시에만 강조 아이콘
+        Expanded(
+          child: Text(
+            title,
+            // 색은 버튼의 foregroundColor에 맡긴다 (직접 color 지정 X)
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        Visibility(
+          visible: selected,
+          maintainSize: true,
+          maintainAnimation: true,
+          maintainState: true,
+          child: const Icon(Icons.check_circle, size: 20),
+        ),
       ],
     );
 
@@ -58,8 +58,9 @@ class IndicatorButton extends StatelessWidget {
             minimumSize: minSize,
             padding: pad,
             shape: shape,
+            // 색 지정하지 않음 → 전역 FilledButtonTheme 사용
           ),
-          child: child,
+          child: rowChild,
         ),
       );
     }
@@ -75,7 +76,7 @@ class IndicatorButton extends StatelessWidget {
           shape: shape,
           side: BorderSide(color: cs.onSurface.withOpacity(0.35), width: 1.4),
         ),
-        child: child,
+        child: rowChild, // ← 비선택도 동일한 Row 사용
       ),
     );
   }
