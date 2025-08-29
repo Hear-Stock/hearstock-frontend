@@ -11,6 +11,7 @@ import 'app_settings.dart';
 import 'pages/chart/chart_page.dart';
 import 'pages/ris/ris_page.dart';
 import 'pages/developer/developer_page.dart';
+import 'pages/ris/indicator_detail_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,6 +56,11 @@ class MyApp extends StatelessWidget {
             '/home': (context) => HomePage(),
             '/chart': (context) => ChartPage(),
             '/rsi': (context) => RsiPage(),
+            IndicatorDetailPage.route: (ctx) {
+              final args =
+                  ModalRoute.of(ctx)!.settings.arguments as IndicatorDetailArgs;
+              return IndicatorDetailPage(args: args);
+            },
             '/dev': (context) => DeveloperPage(),
             '/settings':
                 (context) => SettingsPage(settings: settings), // 설정 페이지
