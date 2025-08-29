@@ -262,7 +262,7 @@ class _RsiPageState extends State<RsiPage> {
                 ),
                 const SizedBox(height: 20),
 
-                // ✅ 지표 선택: “가로로 긴 버튼”을 세로로 나열
+                // 지표 선택: “가로로 긴 버튼”을 세로로 나열
                 IndicatorList(
                   titles: titles,
                   selectedTitle: selectedTitle,
