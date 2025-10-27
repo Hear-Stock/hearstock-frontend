@@ -1,5 +1,5 @@
-import '../services/stock_chart_service.dart';
-import '../services/stock_chart_service.dart'; // ChartData 모델
+import '../../services/stock_chart_service.dart';
+import '../../services/stock_chart_service.dart'; // ChartData 모델
 
 class ChartPageController {
   // period 변환: 사용자 선택값 → API용 포맷

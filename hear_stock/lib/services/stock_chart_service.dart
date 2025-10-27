@@ -2,18 +2,39 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
-/// 차트에 사용할 데이터 모델
+// 차트에 사용할 데이터 모델
 class ChartData {
-  final DateTime date;
-  final double price;
+  final String timestamp;
+  final int open, high, low, close, volume;
+  final double fluctuationRate;
 
-  ChartData({required this.date, required this.price});
+  ChartData({
+    required this.timestamp,
+    required this.open,
+    required this.high,
+    required this.low,
+    required this.close,
+    required this.volume,
+    required this.fluctuationRate,
+  });
+
+  factory ChartData.fromJson(Map<String, dynamic> json) {
+    return ChartData(
+      timestamp: json['timestamp'],
+      open: json['open'],
+      high: json['high'],
+      low: json['low'],
+      close: json['close'],
+      volume: json['volume'],
+      fluctuationRate: (json['fluctuation_rate'] as num).toDouble(),
+    );
+  }
 }
 
 class StockChartService {
   static final String baseUrl = dotenv.env['API_BASE_URL'] ?? '';
 
-  /// 주식 차트 데이터를 가져오는 메소드
+  // 주식 차트 데이터를 가져오는 메소드
   static Future<List<ChartData>> fetchChartData({
     required String code,
     required String market,
@@ -30,8 +51,13 @@ class StockChartService {
 
       return jsonList.map((item) {
         return ChartData(
-          date: DateTime.parse(item['date']),
-          price: (item['close'] ?? 0).toDouble(), // 종가 사용
+          timestamp: item['timestamp'],
+          open: item['open'],
+          high: item['high'],
+          low: item['low'],
+          close: item['close'],
+          volume: item['volume'],
+          fluctuationRate: (item['fluctuation_rate'] as num).toDouble(),
         );
       }).toList();
     } else {

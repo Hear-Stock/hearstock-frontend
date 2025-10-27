@@ -1,6 +1,6 @@
 // lib/chart_painter.dart
 import 'package:flutter/material.dart';
-import '../../../services/stock_chart_service.dart'; // ChartData를 쓰기 위해
+import '../../../../services/stock_chart_service.dart'; // ChartData를 쓰기 위해
 
 class ChartPainter extends CustomPainter {
   final List<ChartData> data;
@@ -16,11 +16,11 @@ class ChartPainter extends CustomPainter {
           ..style = PaintingStyle.stroke;
 
     // 2) 데이터에서 최소·최대 가격 계산
-    double minPrice = data[0].price;
-    double maxPrice = data[0].price;
+    int minPrice = data[0].close;
+    int maxPrice = data[0].close;
     for (var item in data) {
-      if (item.price < minPrice) minPrice = item.price;
-      if (item.price > maxPrice) maxPrice = item.price;
+      if (item.close < minPrice) minPrice = item.close;
+      if (item.close > maxPrice) maxPrice = item.close;
     }
 
     // 3) 차트 크기
@@ -34,9 +34,9 @@ class ChartPainter extends CustomPainter {
     // 5) 점들을 이어 선으로 그림
     for (int i = 0; i < data.length - 1; i++) {
       final double x1 = i * scaleX;
-      final double y1 = chartHeight - (data[i].price - minPrice) * scaleY;
+      final double y1 = chartHeight - (data[i].close - minPrice) * scaleY;
       final double x2 = (i + 1) * scaleX;
-      final double y2 = chartHeight - (data[i + 1].price - minPrice) * scaleY;
+      final double y2 = chartHeight - (data[i + 1].close - minPrice) * scaleY;
 
       canvas.drawLine(Offset(x1, y1), Offset(x2, y2), linePaint);
     }
