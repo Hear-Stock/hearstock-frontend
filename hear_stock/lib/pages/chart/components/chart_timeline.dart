@@ -12,7 +12,7 @@ class ChartTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = <String>['1달', '3달', '1년', '5년', '10년'];
+    final items = <String>['실시간', '1달', '3달', '1년', '5년', '10년'];
 
     return Column(
       children: [

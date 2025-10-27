@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import 'components/graph/chart_graph.dart';
 import 'components/chart_timeline.dart';
 import 'components/chart_header.dart';
@@ -14,6 +15,8 @@ class ChartPage extends StatefulWidget {
 }
 
 class _ChartPageState extends State<ChartPage> {
+  late final WebViewController _controller;
+
   /* ────────────────────────────── UI State ────────────────────────────── */
   String selectedTimeline = '3달';
   bool _isMicrophoneActive = false;
@@ -38,6 +41,38 @@ class _ChartPageState extends State<ChartPage> {
   @override
   void initState() {
     super.initState();
+
+    _controller =
+        WebViewController()
+          ..setJavaScriptMode(JavaScriptMode.unrestricted)
+          ..setNavigationDelegate(
+            NavigationDelegate(
+              onPageFinished: (url) {
+                debugPrint('✅ WebView 로드 완료: $url');
+
+                // 페이지 로드 완료 후 JS 호출 (Intent 값 전달)
+                final code = IntentResultStore.code ?? '';
+                final period = IntentResultStore.period ?? '3mo';
+                final market = IntentResultStore.market ?? 'KR';
+
+                if (code.isNotEmpty) {
+                  final jsCode = """
+              updateStockChart({
+                code: '$code',
+                period: '$period',
+                market: '$market'
+              });
+            """;
+                  _controller.runJavaScript(jsCode);
+                  debugPrint('✅ 초기 JS 실행 완료: $jsCode');
+                }
+              },
+            ),
+          )
+          ..loadRequest(
+            Uri.parse('https://hearstock-frontend-react-j4lm.vercel.app/'),
+          );
+
     _scrollController.addListener(() {
       if (_isMicrophoneActive) _stopListeningManually();
     });
@@ -124,6 +159,16 @@ class _ChartPageState extends State<ChartPage> {
       // period 갱신도 IntentResultStore에 반영 (다음 화면 전환 대비)
       IntentResultStore.period = period;
 
+      final jsCode = """
+        updateStockChart({
+          code: '$code',
+          period: '$period',
+          market: '$market'
+        });
+      """;
+      _controller.runJavaScript(jsCode);
+
+      debugPrint('updateTimeline → WebView updateStockChart 호출 완료');
       debugPrint('updateTimeline: code=$code, period=$period');
     } catch (e, st) {
       debugPrint('updateTimeline 실패: $e\n$st');
@@ -144,8 +189,8 @@ class _ChartPageState extends State<ChartPage> {
         return '1y';
       case '5년':
         return '5y';
-      case '10년':
-        return '10y';
+      case '전체':
+        return 'all';
       default:
         return '3mo';
     }
@@ -161,8 +206,8 @@ class _ChartPageState extends State<ChartPage> {
         return '1년';
       case '5y':
         return '5년';
-      case '10y':
-        return '10년';
+      case 'all':
+        return '전체';
       default:
         return '3달';
     }
@@ -259,42 +304,60 @@ class _ChartPageState extends State<ChartPage> {
     );
   }
 
+  // Widget _buildGraphCard(BuildContext context) {
+  //   final cs = Theme.of(context).colorScheme;
+  //   final tt = Theme.of(context).textTheme;
+
+  //   return Container(
+  //     width: double.infinity,
+  //     padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+  //     decoration: BoxDecoration(
+  //       color: cs.surface,
+  //       borderRadius: BorderRadius.circular(12),
+  //       border: Border.all(color: cs.onSurface.withOpacity(0.12)),
+  //     ),
+  //     child: Column(
+  //       children: [
+  //         if (_isLoading)
+  //           Padding(
+  //             padding: const EdgeInsets.symmetric(vertical: 48),
+  //             child: CircularProgressIndicator(
+  //               strokeWidth: 2,
+  //               color: cs.onSurface,
+  //             ),
+  //           )
+  //         else
+  //           SizedBox(height: _graphHeight, child: ChartGraph(data: _chartData)),
+  //         const SizedBox(height: 8),
+  //         Align(
+  //           alignment: Alignment.centerRight,
+  //           child: Text(
+  //             selectedTimeline,
+  //             style: tt.labelLarge?.copyWith(
+  //               fontSize: 14,
+  //               color: cs.onSurface.withOpacity(0.7),
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
   Widget _buildGraphCard(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+      height: 400,
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: cs.onSurface.withOpacity(0.12)),
       ),
-      child: Column(
-        children: [
-          if (_isLoading)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 48),
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: cs.onSurface,
-              ),
-            )
-          else
-            SizedBox(height: _graphHeight, child: ChartGraph(data: _chartData)),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              selectedTimeline,
-              style: tt.labelLarge?.copyWith(
-                fontSize: 14,
-                color: cs.onSurface.withOpacity(0.7),
-              ),
-            ),
-          ),
-        ],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: WebViewWidget(controller: _controller),
       ),
     );
   }

@@ -11,6 +11,8 @@ class ChartPageController {
         return "3mo";
       case "1년":
         return "1y";
+      case "전체":
+        return "all";
       default:
         return "3mo";
     }
