@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
-// 차트에 사용할 데이터 모델
+// 차트 데이터 모델
 class ChartData {
   final String timestamp;
   final int open, high, low, close, volume;
@@ -34,34 +34,46 @@ class ChartData {
 class StockChartService {
   static final String baseUrl = dotenv.env['API_BASE_URL'] ?? '';
 
-  // 주식 차트 데이터를 가져오는 메소드
+  // POST 방식으로 변경된 메서드
   static Future<List<ChartData>> fetchChartData({
     required String code,
     required String market,
     required String period,
   }) async {
-    final url = Uri.parse(
-      '$baseUrl/api/stock/chart?code=$code&period=$period&market=$market',
+    final fullCode = code.contains('.') ? code : '$code.KS';
+    final url = Uri.parse('$baseUrl/api/stock/chart/direct');
+
+    print('[POST] 요청 URL: $url');
+    print('body: { stock_code: $fullCode, period: $period, market: $market }');
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'stock_code': fullCode,
+        'period': period,
+        'market': market,
+      }),
     );
 
-    final response = await http.get(url);
-
     if (response.statusCode == 200) {
-      final List<dynamic> jsonList = json.decode(response.body);
+      final data = json.decode(response.body);
 
-      return jsonList.map((item) {
-        return ChartData(
-          timestamp: item['timestamp'],
-          open: item['open'],
-          high: item['high'],
-          low: item['low'],
-          close: item['close'],
-          volume: item['volume'],
-          fluctuationRate: (item['fluctuation_rate'] as num).toDouble(),
-        );
-      }).toList();
+      // 응답이 List 형식인지 확인
+      if (data is List) {
+        return data.map((item) => ChartData.fromJson(item)).toList();
+      }
+      // 응답이 {"data": [...]} 구조인 경우도 대비
+      else if (data is Map && data['data'] is List) {
+        return (data['data'] as List)
+            .map((item) => ChartData.fromJson(item))
+            .toList();
+      } else {
+        throw Exception('응답 형식이 예상과 다릅니다.');
+      }
     } else {
-      throw Exception('API 요청 실패: ${response.statusCode}');
+      print('서버 응답 오류: ${response.statusCode}, ${response.body}');
+      throw Exception('API 요청 실패 (${response.statusCode})');
     }
   }
 }
