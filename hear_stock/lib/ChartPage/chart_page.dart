@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'components/graph/chart_graph.dart';
+//import 'components/graph/chart_graph.dart';
+import 'chart_view.dart';
 import 'components/chart_timeline.dart';
 import 'components/chart_header.dart';
 
@@ -148,7 +149,13 @@ class _ChartPageState extends State<ChartPage> {
                       ),
                       SizedBox(height: 10),
                       // 차트 그래프
-                      ChartGraph(data: _chartData),
+                      ChartGraphView(
+                        data: _chartData,
+                        code: IntentResultStore.code,
+                        period: convertTimelineToPeriod(selectedTimeline),
+                        market: IntentResultStore.market,
+                      ),
+                      //ChartGraph(data: _chartData),
                       SizedBox(height: 10),
                       Center(
                         child: Text(

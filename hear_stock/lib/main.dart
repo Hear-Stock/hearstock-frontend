@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'landing_page.dart';
 import 'home_page.dart';
 import 'chartPage/chart_page.dart';
+import 'ChartPage/chart_view.dart';
 import 'ris_page.dart';
 import 'providers/intent_result_provider.dart';
 

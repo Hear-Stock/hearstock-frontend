@@ -2,9 +2,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-import '../providers/intent_result_provider.dart';
 
 import '../stores/intent_result_store.dart';
 
@@ -40,12 +37,6 @@ class ApiService {
     Map<String, dynamic> data,
     BuildContext context,
   ) async {
-    final intentProvider = Provider.of<IntentResultProvider>(
-      context,
-      listen: false,
-    );
-    intentProvider.setIntentResult(data);
-
     final String? path = data['path'];
     final String? intent = data['intent'];
 

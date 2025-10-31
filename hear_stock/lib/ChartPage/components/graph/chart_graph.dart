@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_soloud/flutter_soloud.dart';
+//import 'package:flutter_soloud/flutter_soloud.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 //import 'chart_sonification.dart';
 import 'chart_painter.dart';
