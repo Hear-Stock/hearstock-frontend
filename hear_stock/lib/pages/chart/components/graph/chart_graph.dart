@@ -6,7 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 //import 'chart_sonification.dart';
 import 'chart_painter.dart';
-import '../../../services/stock_chart_service.dart';
+import '../../../../services/stock_chart_service.dart';
 
 class ChartGraph extends StatefulWidget {
   final List<ChartData> data;

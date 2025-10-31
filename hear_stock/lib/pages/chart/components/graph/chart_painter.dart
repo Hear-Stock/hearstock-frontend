@@ -1,6 +1,6 @@
 // lib/chart_painter.dart
 import 'package:flutter/material.dart';
-import '../../../services/stock_chart_service.dart'; // ChartData를 쓰기 위해
+import '../../../../services/stock_chart_service.dart'; // ChartData를 쓰기 위해
 
 class ChartPainter extends CustomPainter {
   final List<ChartData> data;

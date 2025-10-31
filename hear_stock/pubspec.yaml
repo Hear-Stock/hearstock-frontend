@@ -39,8 +39,12 @@ dependencies:
   flutter_soloud: ^3.1.10
   flutter_dotenv: ^5.2.1
   http: ^1.4.0
+<<<<<<< HEAD
   provider: ^6.1.5+1
   webview_flutter: ^4.13.0
+=======
+  shared_preferences: ^2.2.3
+>>>>>>> 1895c95f72bc5ceb7701536c3fb61891e46c693b
   # flutter_tts: ^3.2.2
   # flutter_sound: ^9.1.6
   # audioplayers: ^0.20.1
