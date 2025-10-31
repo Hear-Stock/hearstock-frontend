@@ -42,7 +42,9 @@ class _ChartGraphState extends State<ChartGraphView> {
             ),
           )
           // React 페이지 주소
-          ..loadRequest(Uri.parse('https://your-react-app.vercel.app/sphere'));
+          ..loadRequest(
+            Uri.parse('https://hearstock-frontend-react.vercel.app/webView'),
+          );
   }
 
   // Flutter → React 데이터 전달
