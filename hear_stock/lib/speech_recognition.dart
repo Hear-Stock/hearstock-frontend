@@ -7,17 +7,23 @@ class SpeechRecognition {
   Future<void> startListening(Function(String) onResult) async {
     await _speech.stop();
 
-    bool available = await _speech.initialize(); // 음성 인식 초기화
+    bool available = await _speech.initialize(
+      onStatus: (status) => print('🎙️ STT 상태: $status'),
+      onError: (error) => print('❌ STT 오류: $error'),
+    ); // 음성 인식 초기화
 
-    if (available) {
-      _speech.listen(
-        onResult: (result) {
-          onResult(result.recognizedWords); // 인식된 텍스트를 콜백으로 전달
-        },
-      );
-    } else {
-      print("음성 인식이 지원되지 않습니다.");
+    if (!available) {
+      print("⚠️ 음성 인식이 지원되지 않습니다.");
+      return;
     }
+
+    _speech.listen(
+      onResult: (result) {
+        print('✅ 인식된 단어: ${result.recognizedWords}');
+        onResult(result.recognizedWords);
+      },
+      listenMode: stt.ListenMode.dictation,
+    );
   }
 
   // 음성 인식 중지 함수
