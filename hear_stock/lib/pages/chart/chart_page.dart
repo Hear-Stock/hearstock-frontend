@@ -246,7 +246,16 @@ class _ChartPageState extends State<ChartPage> {
               ),
             )
           else
-            SizedBox(height: _graphHeight, child: ChartGraph(data: _chartData)),
+            // SizedBox(height: _graphHeight, child: ChartGraph(data: _chartData)),
+            SizedBox(
+              height: _graphHeight,
+              child: ChartGraph(
+                code: IntentResultStore.code!,
+                period: _timelineToPeriod(selectedTimeline),
+                market: IntentResultStore.market!,
+              ),
+            ),
+
           const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerRight,

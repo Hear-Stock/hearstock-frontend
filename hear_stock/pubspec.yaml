@@ -41,6 +41,8 @@ dependencies:
   http: ^1.4.0
   shared_preferences: ^2.2.3
   webview_flutter: ^4.13.0
+  webview_flutter_android: ^4.7.0
+  webview_flutter_wkwebview: ^3.10.0
   # flutter_tts: ^3.2.2
   # flutter_sound: ^9.1.6
   # audioplayers: ^0.20.1

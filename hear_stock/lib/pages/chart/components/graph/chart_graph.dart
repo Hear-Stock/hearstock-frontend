@@ -1,94 +1,58 @@
 import 'dart:convert';
-import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
-//import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-//import 'chart_sonification.dart';
-import 'chart_painter.dart';
-import '../../../../services/stock_chart_service.dart';
-
 class ChartGraph extends StatefulWidget {
-  final List<ChartData> data;
+  final String code;
+  final String period;
+  final String market;
 
-  ChartGraph({required this.data});
+  const ChartGraph({
+    required this.code,
+    required this.period,
+    required this.market,
+  });
 
   @override
-  _ChartGraphState createState() => _ChartGraphState();
+  State<ChartGraph> createState() => _ChartGraphState();
 }
 
 class _ChartGraphState extends State<ChartGraph> {
-  String selectedPrice = "";
-  //late ChartSonificationService _sonifier;
+  late final WebViewController _controller;
+  bool _isLoaded = false;
 
   @override
   void initState() {
     super.initState();
-    //_initializeSonifier();
+    _controller =
+        WebViewController()
+          ..setJavaScriptMode(JavaScriptMode.unrestricted)
+          ..setNavigationDelegate(
+            NavigationDelegate(onPageFinished: (url) => _sendStockData()),
+          )
+          ..loadRequest(
+            Uri.parse('https://hearstock-frontend-react.vercel.app/webView'),
+          );
   }
 
-  // Future<void> _initializeSonifier() async {
-  //   _sonifier = ChartSonificationService(data: widget.data);
-  //   await _sonifier.init();
-  //   setState(() {}); // 초기화 완료 후 리렌더링
-  // }
-
-  // @override
-  // void didUpdateWidget(covariant ChartGraph oldWidget) {
-  //   super.didUpdateWidget(oldWidget);
-  //   // 데이터가 바뀌면 소리 서비스도 다시 초기화
-  //   if (oldWidget.data != widget.data) {
-  //     _sonifier.dispose();
-  //     _initializeSonifier();
-  //   }
-  // }
-
-  // @override
-  // void dispose() {
-  //   _sonifier.dispose();
-  //   super.dispose();
-  // }
+  Future<void> _sendStockData() async {
+    final payload = jsonEncode({
+      'code': widget.code,
+      'period': widget.period,
+      'market': widget.market,
+    });
+    await _controller.runJavaScript('window.updateStockChart($payload)');
+    setState(() => _isLoaded = true);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final data = widget.data;
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-      padding: const EdgeInsets.all(10),
-      color: const Color(0xff131313),
-      height: 250,
-      width: double.infinity,
-      child:
-          data.isEmpty
-              ? const Center(child: CircularProgressIndicator())
-              : LayoutBuilder(
-                builder: (context, constraints) {
-                  final chartWidth = constraints.maxWidth;
-                  final chartHeight = constraints.maxHeight;
-
-                  return GestureDetector(
-                    onPanUpdate: (details) async {
-                      // final label = await _sonifier.play3DSoundAt(
-                      //   details.localPosition,
-                      //   Size(chartWidth, chartHeight),
-                      // );
-                      // setState(() => selectedPrice = label);
-                    },
-                    onTapUp: (details) async {
-                      // final label = await _sonifier.play3DSoundAt(
-                      //   details.localPosition,
-                      //   Size(chartWidth, chartHeight),
-                      // );
-                      // setState(() => selectedPrice = label);
-                    },
-                    child: CustomPaint(
-                      painter: ChartPainter(data: data),
-                      size: Size(chartWidth, chartHeight),
-                    ),
-                  );
-                },
-              ),
+    return Stack(
+      children: [
+        WebViewWidget(controller: _controller),
+        if (!_isLoaded)
+          const Center(child: CircularProgressIndicator(color: Colors.white)),
+      ],
     );
   }
 }
