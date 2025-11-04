@@ -47,14 +47,19 @@ class _ChartGraphState extends State<ChartGraph> {
   // Flutter → React 데이터 전달
   Future<void> _sendStockData() async {
     final String baseUrl = dotenv.env['API_BASE_URL'] ?? '';
-    final code = widget.code ?? IntentResultStore.code ?? '005930';
-    final period = widget.period ?? IntentResultStore.period ?? '3mo';
-    final market = widget.market ?? IntentResultStore.market ?? 'KS';
+    final code = widget.code ?? IntentResultStore.code;
+    String? period;
+
+    // current_price 인 경우 period 불필요
+    if (IntentResultStore.intent != "current_price") {
+      period = widget.period ?? IntentResultStore.period;
+    }
+    final market = widget.market ?? IntentResultStore.market;
 
     final data = jsonEncode({
       'baseUrl': baseUrl,
       'code': code,
-      'period': period,
+      if (period != null) 'period': period,
       'market': market,
     });
 

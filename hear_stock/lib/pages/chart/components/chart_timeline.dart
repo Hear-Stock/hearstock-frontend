@@ -16,11 +16,11 @@ class ChartTimeline extends StatelessWidget {
 
     return Column(
       children: [
-        // 실시간 버튼(디자인 통일, 필요 시 onPressed 구현)
+        // 실시간 버튼
         SizedBox(
           width: MediaQuery.of(context).size.width * 0.8,
           child: FilledButton(
-            onPressed: () {},
+            onPressed: () => onTimelineChanged("실시간"),
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
               shape: RoundedRectangleBorder(
@@ -30,6 +30,7 @@ class ChartTimeline extends StatelessWidget {
             child: const Text('실시간', style: TextStyle(fontSize: 18)),
           ),
         ),
+
         const SizedBox(height: 16),
 
         Wrap(

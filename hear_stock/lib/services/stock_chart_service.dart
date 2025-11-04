@@ -5,7 +5,8 @@ import 'package:http/http.dart' as http;
 // 차트에 사용할 데이터 모델
 class ChartData {
   final String timestamp;
-  final int open, high, low, close, volume;
+  final int open, high, low, close;
+  final int volume;
   final double fluctuationRate;
 
   ChartData({

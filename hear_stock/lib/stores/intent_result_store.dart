@@ -1,4 +1,5 @@
 class IntentResultStore {
+  static String? intent;
   static String? name;
   static String? code;
   static String? market;

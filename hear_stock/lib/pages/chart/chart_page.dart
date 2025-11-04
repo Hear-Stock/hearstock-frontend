@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'dart:convert'; // jsonDecode
+
 import 'components/graph/chart_graph.dart';
 import 'components/chart_timeline.dart';
 import 'components/chart_header.dart';
@@ -7,6 +10,7 @@ import '../../services/voice_scroll_handler.dart';
 import '../../widgets/mic_overlay.dart';
 import '../../services/stock_chart_service.dart'; // ChartData
 import '../../stores/intent_result_store.dart';
+import '../../services/webSocket.dart';
 
 class ChartPage extends StatefulWidget {
   @override
@@ -29,7 +33,7 @@ class _ChartPageState extends State<ChartPage> {
 
   /* ─────────────────────────────── Constants ──────────────────────────── */
   static const _pagePadding = EdgeInsets.fromLTRB(24, 28, 24, 16);
-  static const _graphHeight = 260.0;
+  static const _graphHeight = 600.0;
 
   /* intent 초기화 중복 방지 */
   bool _didInitFromIntent = false;
@@ -57,6 +61,14 @@ class _ChartPageState extends State<ChartPage> {
       final period = IntentResultStore.period ?? '3mo';
       final timeline = _periodToTimeline(period);
 
+      if (IntentResultStore.intent == "current_price") {
+        // 바로 실시간 모드 진입
+        selectedTimeline = "실시간";
+        connectLive();
+        _isLoading = false;
+        return;
+      }
+
       setState(() {
         selectedTimeline = timeline;
         _chartData =
@@ -80,6 +92,10 @@ class _ChartPageState extends State<ChartPage> {
   }
 
   Future<void> _onRefresh() async {
+    setState(() {
+      _recognizedText = ""; // 새로 시작할 때 초기화
+    });
+
     _voiceScrollHandler.startListening(
       context,
       onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),
@@ -92,10 +108,59 @@ class _ChartPageState extends State<ChartPage> {
   void updateTimeline(String newTimeline) {
     setState(() {
       selectedTimeline = newTimeline;
-      // 필요 시 여기서 fetch 연동:
-      // final period = _timelineToPeriod(newTimeline);
-      // ChartPageController().fetchChartData(...);
+
+      if (newTimeline == "실시간") {
+        disconnectLive();
+        connectLive();
+      } else {
+        disconnectLive();
+        // 기존 REST fetch 실행 or 재렌더해서 React 전달
+      }
     });
+  }
+
+  LivePriceSocket liveSocket = LivePriceSocket();
+  StreamSubscription? liveSub;
+
+  void connectLive() {
+    final code = IntentResultStore.code!;
+
+    liveSocket.connect(code);
+
+    liveSub = liveSocket.stream?.listen((event) {
+      final msg = jsonDecode(event);
+      print("WS msg : $msg");
+
+      if (msg["current_price"] != null) {
+        setState(() {
+          final last = _chartData.last;
+
+          final int newPrice = msg["current_price"] as int;
+
+          final updated = ChartData(
+            timestamp: last.timestamp,
+            open: last.open,
+            high: newPrice > last.high ? newPrice : last.high,
+            low: newPrice < last.low ? newPrice : last.low,
+            close: newPrice,
+            volume: msg["volume"] as int? ?? last.volume,
+            fluctuationRate:
+                (msg["fluctuation_rate"] as num?)?.toDouble() ??
+                last.fluctuationRate,
+          );
+
+          final newList = List<ChartData>.from(_chartData);
+          newList[newList.length - 1] = updated;
+          _chartData = newList;
+        });
+      }
+    });
+  }
+
+  void disconnectLive() {
+    liveSocket.disconnect();
+    liveSub?.cancel();
+    liveSub = null;
   }
 
   static String _timelineToPeriod(String timeline) {
@@ -160,7 +225,9 @@ class _ChartPageState extends State<ChartPage> {
       onRefresh: _onRefresh,
       child: ListView(
         controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
+        //physics: const AlwaysScrollableScrollPhysics(),
+        physics: const ClampingScrollPhysics(),
+
         children: [
           Padding(
             padding: _pagePadding,
@@ -229,7 +296,7 @@ class _ChartPageState extends State<ChartPage> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: BorderRadius.circular(12),
@@ -251,7 +318,10 @@ class _ChartPageState extends State<ChartPage> {
               height: _graphHeight,
               child: ChartGraph(
                 code: IntentResultStore.code!,
-                period: _timelineToPeriod(selectedTimeline),
+                period:
+                    selectedTimeline == "실시간"
+                        ? "live"
+                        : _timelineToPeriod(selectedTimeline),
                 market: IntentResultStore.market!,
               ),
             ),

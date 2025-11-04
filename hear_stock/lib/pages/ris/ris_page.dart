@@ -124,6 +124,10 @@ class _RsiPageState extends State<RsiPage> {
   }
 
   Future<void> _onRefresh() async {
+    setState(() {
+      _recognizedText = ""; // 새로 시작할 때 초기화
+    });
+
     _voiceScrollHandler.startListening(
       context,
       onStart: (isActive) => setState(() => _isMicrophoneActive = isActive),

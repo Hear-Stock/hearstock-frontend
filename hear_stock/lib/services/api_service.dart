@@ -40,6 +40,16 @@ class ApiService {
     final String? path = data['path'];
     final String? intent = data['intent'];
 
+    if (intent == 'current_price') {
+      IntentResultStore.intent = "current_price";
+      IntentResultStore.name = data['name'];
+      IntentResultStore.code = data['code'];
+      IntentResultStore.market = data['market'];
+
+      Navigator.pushNamed(context, '/chart');
+      return;
+    }
+
     if (path == null || path.isEmpty) {
       print('path 없음: $data');
       return;
@@ -57,7 +67,7 @@ class ApiService {
         final fetchedData = json.decode(response.body);
 
         final name = data['name'];
-        final code = data['code'].toString().split('.')[0];
+        final code = data['code'];
         final market = data['market'];
         final period = data['period'];
 
