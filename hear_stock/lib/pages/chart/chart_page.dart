@@ -33,7 +33,7 @@ class _ChartPageState extends State<ChartPage> {
 
   /* ─────────────────────────────── Constants ──────────────────────────── */
   static const _pagePadding = EdgeInsets.fromLTRB(24, 28, 24, 16);
-  static const _graphHeight = 800.0;
+  //static const _graphHeight = 800.0;
 
   /* intent 초기화 중복 방지 */
   bool _didInitFromIntent = false;
@@ -294,6 +294,9 @@ class _ChartPageState extends State<ChartPage> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
+    final width = MediaQuery.of(context).size.width;
+    final graphHeight = width * 1.1; // 가로 대비 1.1배 비율
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
@@ -315,7 +318,7 @@ class _ChartPageState extends State<ChartPage> {
           else
             // SizedBox(height: _graphHeight, child: ChartGraph(data: _chartData)),
             SizedBox(
-              height: _graphHeight,
+              height: graphHeight,
               child: ChartGraph(
                 code: IntentResultStore.code!,
                 period:
