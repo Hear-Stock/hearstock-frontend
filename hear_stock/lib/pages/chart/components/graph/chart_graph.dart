@@ -1,17 +1,21 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import '../../../../stores/intent_result_store.dart';
 
 class ChartGraph extends StatefulWidget {
-  final String code;
-  final String period;
-  final String market;
+  final List<dynamic> data;
+  final String? code;
+  final String? period;
+  final String? market;
 
   const ChartGraph({
-    required this.code,
-    required this.period,
-    required this.market,
-  });
+    required this.data,
+    this.code,
+    this.period,
+    this.market,
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<ChartGraph> createState() => _ChartGraphState();
@@ -24,35 +28,59 @@ class _ChartGraphState extends State<ChartGraph> {
   @override
   void initState() {
     super.initState();
+
     _controller =
         WebViewController()
           ..setJavaScriptMode(JavaScriptMode.unrestricted)
+          ..setBackgroundColor(const Color(0xff131313))
           ..setNavigationDelegate(
-            NavigationDelegate(onPageFinished: (url) => _sendStockData()),
+            NavigationDelegate(
+              onPageFinished: (url) async {
+                print("WebView 로드 완료 => JS 호출 시작");
+                setState(() => _isLoaded = true);
+                await _sendStockData();
+              },
+            ),
           )
+          // React 페이지 주소
           ..loadRequest(
             Uri.parse('https://hearstock-frontend-react.vercel.app/webView'),
           );
   }
 
+  // Flutter → React 데이터 전달
   Future<void> _sendStockData() async {
-    final payload = jsonEncode({
-      'code': widget.code,
-      'period': widget.period,
-      'market': widget.market,
-    });
-    await _controller.runJavaScript('window.updateStockChart($payload)');
-    setState(() => _isLoaded = true);
+    final code = widget.code ?? IntentResultStore.code ?? '005930';
+    final period = widget.period ?? IntentResultStore.period ?? '3mo';
+    final market = widget.market ?? IntentResultStore.market ?? 'KS';
+
+    final data = jsonEncode({'code': code, 'period': period, 'market': market});
+
+    print('Flutter → React 전달 데이터: $data');
+
+    try {
+      await _controller.runJavaScript('window.updateStockChart($data)');
+      print("JS 호출 완료됨");
+    } catch (e) {
+      print('JavaScript 실행 실패: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        WebViewWidget(controller: _controller),
-        if (!_isLoaded)
-          const Center(child: CircularProgressIndicator(color: Colors.white)),
-      ],
+    return Container(
+      height: 360,
+      decoration: const BoxDecoration(
+        color: Color(0xff131313),
+        borderRadius: BorderRadius.all(Radius.circular(10)),
+      ),
+      child: Stack(
+        children: [
+          WebViewWidget(controller: _controller),
+          if (!_isLoaded)
+            const Center(child: CircularProgressIndicator(color: Colors.white)),
+        ],
+      ),
     );
   }
 }

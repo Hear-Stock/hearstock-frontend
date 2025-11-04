@@ -36,6 +36,7 @@ class _ChartGraphState extends State<ChartGraphView> {
           ..setNavigationDelegate(
             NavigationDelegate(
               onPageFinished: (url) async {
+                print("WebView 로드 완료 => JS 호출 시작");
                 setState(() => _isLoaded = true);
                 await _sendStockData();
               },
@@ -51,7 +52,7 @@ class _ChartGraphState extends State<ChartGraphView> {
   Future<void> _sendStockData() async {
     final code = widget.code ?? IntentResultStore.code ?? '005930';
     final period = widget.period ?? IntentResultStore.period ?? '3mo';
-    final market = widget.market ?? IntentResultStore.market ?? 'KOSPI';
+    final market = widget.market ?? IntentResultStore.market ?? 'KS';
 
     final data = jsonEncode({'code': code, 'period': period, 'market': market});
 
@@ -59,6 +60,7 @@ class _ChartGraphState extends State<ChartGraphView> {
 
     try {
       await _controller.runJavaScript('window.updateStockChart($data)');
+      print("JS 호출 완료됨");
     } catch (e) {
       print('JavaScript 실행 실패: $e');
     }
