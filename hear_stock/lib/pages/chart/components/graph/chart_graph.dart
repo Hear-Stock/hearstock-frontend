@@ -85,4 +85,15 @@ class _ChartGraphState extends State<ChartGraph> {
       ),
     );
   }
+
+  @override
+  void didUpdateWidget(covariant ChartGraph oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.code != widget.code ||
+        oldWidget.period != widget.period ||
+        oldWidget.market != widget.market) {
+      _sendStockData();
+    }
+  }
 }

@@ -244,6 +244,7 @@ class _RsiPageState extends State<RsiPage> {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
               children: [
+                SizedBox(height: 20),
                 // 상단 선택 지표 카드
                 HeaderCard(
                   title: selectedTitle,
