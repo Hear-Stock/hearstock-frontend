@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
+
 import '../../../../stores/intent_result_store.dart';
 
 class ChartGraph extends StatefulWidget {
@@ -83,7 +86,15 @@ class _ChartGraphState extends State<ChartGraph> {
       ),
       child: Stack(
         children: [
-          WebViewWidget(controller: _controller),
+          WebViewWidget(
+            controller: _controller,
+            gestureRecognizers: {
+              Factory<OneSequenceGestureRecognizer>(
+                () => EagerGestureRecognizer(),
+              ),
+            },
+          ),
+
           if (!_isLoaded)
             const Center(child: CircularProgressIndicator(color: Colors.white)),
         ],

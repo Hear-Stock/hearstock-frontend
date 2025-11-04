@@ -33,7 +33,7 @@ class _ChartPageState extends State<ChartPage> {
 
   /* ─────────────────────────────── Constants ──────────────────────────── */
   static const _pagePadding = EdgeInsets.fromLTRB(24, 28, 24, 16);
-  static const _graphHeight = 600.0;
+  static const _graphHeight = 800.0;
 
   /* intent 초기화 중복 방지 */
   bool _didInitFromIntent = false;
