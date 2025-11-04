@@ -208,8 +208,8 @@ class _ChartPageState extends State<ChartPage> {
   }
 
   Widget _buildHeader() {
-    return const ChartHeader(
-      headerTitle: '삼성전자',
+    return ChartHeader(
+      headerTitle: IntentResultStore.name ?? '주식',
       subtitle: '주식을 불러왔어요. 추가 정보를 요청하세요.',
     );
   }
