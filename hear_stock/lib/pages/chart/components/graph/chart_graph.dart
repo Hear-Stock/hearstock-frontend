@@ -79,22 +79,26 @@ class _ChartGraphState extends State<ChartGraph> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 360,
+      height: MediaQuery.of(context).size.height * 0.55,
       decoration: const BoxDecoration(
         color: Color(0xff131313),
         borderRadius: BorderRadius.all(Radius.circular(10)),
       ),
       child: Stack(
         children: [
+          // WebViewWidget(
+          //   controller: _controller,
+          //   gestureRecognizers: {
+          //     Factory<OneSequenceGestureRecognizer>(
+          //       () => EagerGestureRecognizer(),
+          //     ),
+          //   },
+          // ),
           WebViewWidget(
             controller: _controller,
-            gestureRecognizers: {
-              Factory<OneSequenceGestureRecognizer>(
-                () => EagerGestureRecognizer(),
-              ),
-            },
+            gestureRecognizers:
+                const <Factory<OneSequenceGestureRecognizer>>{}.toSet(),
           ),
-
           if (!_isLoaded)
             const Center(child: CircularProgressIndicator(color: Colors.white)),
         ],

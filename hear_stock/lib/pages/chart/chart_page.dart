@@ -226,9 +226,9 @@ class _ChartPageState extends State<ChartPage> {
       onRefresh: _onRefresh,
       child: ListView(
         controller: _scrollController,
-        //physics: const AlwaysScrollableScrollPhysics(),
-        physics: const ClampingScrollPhysics(),
+        physics: const AlwaysScrollableScrollPhysics(),
 
+        //physics: const ClampingScrollPhysics(),
         children: [
           Padding(
             padding: _pagePadding,

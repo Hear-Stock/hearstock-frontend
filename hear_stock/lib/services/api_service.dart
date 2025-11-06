@@ -85,6 +85,7 @@ class ApiService {
 
         // intent에 따라 저장
         if (intent == 'chart') {
+          IntentResultStore.intent = "chart";
           IntentResultStore.setChart(
             name_: name,
             code_: code,

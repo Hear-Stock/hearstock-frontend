@@ -9,7 +9,7 @@ class LivePriceSocket {
   void connect(String code) {
     if (channel != null) return;
 
-    final wsUrl = 'ws://$baseUrl/api/stock/ws/trade-price';
+    final wsUrl = 'wss://$baseUrl/api/stock/ws/trade-price';
 
     channel = WebSocketChannel.connect(Uri.parse(wsUrl));
 

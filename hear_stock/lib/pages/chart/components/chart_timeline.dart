@@ -19,16 +19,35 @@ class ChartTimeline extends StatelessWidget {
         // 실시간 버튼
         SizedBox(
           width: MediaQuery.of(context).size.width * 0.8,
-          child: FilledButton(
-            onPressed: () => onTimelineChanged("실시간"),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('실시간', style: TextStyle(fontSize: 18)),
-          ),
+          child:
+              selectedTimeline == "실시간"
+                  ? FilledButton(
+                    onPressed: () => onTimelineChanged("실시간"),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('실시간', style: TextStyle(fontSize: 18)),
+                  )
+                  : OutlinedButton(
+                    onPressed: () => onTimelineChanged("실시간"),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      side: const BorderSide(width: 1.5, color: Colors.white),
+                    ),
+                    child: const Text('실시간', style: TextStyle(fontSize: 18)),
+                  ),
         ),
 
         const SizedBox(height: 16),
@@ -62,7 +81,11 @@ class ChartTimeline extends StatelessWidget {
     }
     return OutlinedButton(
       onPressed: () => onTimelineChanged(timeline),
-      style: OutlinedButton.styleFrom(padding: pad, shape: shape),
+      style: OutlinedButton.styleFrom(
+        padding: pad,
+        shape: shape,
+        side: const BorderSide(width: 1.5, color: Color(0xFFFFFFFF)),
+      ),
       child: Text(timeline, style: const TextStyle(fontSize: 16)),
     );
   }
