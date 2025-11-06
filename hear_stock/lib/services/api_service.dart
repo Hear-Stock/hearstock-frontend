@@ -45,6 +45,8 @@ class ApiService {
       IntentResultStore.name = data['name'];
       IntentResultStore.code = data['code'];
       IntentResultStore.market = data['market'];
+      IntentResultStore.market = data['market'];
+      IntentResultStore.period = null;
 
       Navigator.pushNamed(context, '/chart');
       return;
@@ -70,6 +72,16 @@ class ApiService {
         final code = data['code'];
         final market = data['market'];
         final period = data['period'];
+
+        if (code == null || market == null) {
+          print("❌ 종목 식별 실패");
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("해당 종목을 찾지 못했어요. 정확한 종목명을 다시 말씀해주세요."),
+            ),
+          );
+          return; // 여기서 종료
+        }
 
         // intent에 따라 저장
         if (intent == 'chart') {

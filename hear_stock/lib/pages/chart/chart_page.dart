@@ -110,6 +110,7 @@ class _ChartPageState extends State<ChartPage> {
       selectedTimeline = newTimeline;
 
       if (newTimeline == "실시간") {
+        selectedTimeline = "실시간";
         disconnectLive();
         connectLive();
       } else {
@@ -294,8 +295,9 @@ class _ChartPageState extends State<ChartPage> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final width = MediaQuery.of(context).size.width;
-    final graphHeight = width * 1.1; // 가로 대비 1.1배 비율
+    // final width = MediaQuery.of(context).size.width;
+    // final graphHeight = width * 1.1; // 가로 대비 1.1배 비율
+    final graphHeight = 800.0;
 
     return Container(
       width: double.infinity,
