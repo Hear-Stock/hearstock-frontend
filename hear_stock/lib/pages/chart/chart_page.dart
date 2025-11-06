@@ -257,7 +257,20 @@ class _ChartPageState extends State<ChartPage> {
       child: SizedBox(
         width: double.infinity,
         child: FilledButton.icon(
-          onPressed: () => Navigator.pushNamed(context, '/rsi'),
+          onPressed: () {
+            final cleanCode = IntentResultStore.code!
+                .replaceAll('.KS', '')
+                .replaceAll('.KQ', '');
+            Navigator.pushNamed(
+              context,
+              '/rsi',
+              arguments: {
+                'code': cleanCode,
+                'name': IntentResultStore.name,
+                'market': IntentResultStore.market,
+              },
+            );
+          },
           icon: const Icon(Icons.analytics_outlined),
           label: const Text('투자지표 보기'), // 색은 버튼 테마에서 처리
           style: FilledButton.styleFrom(

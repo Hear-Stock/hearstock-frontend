@@ -82,9 +82,11 @@ class _RsiPageState extends State<RsiPage> {
   // ----- 데이터 로드 -----
   Future<void> _fetchIndicatorData() async {
     final baseUrl = dotenv.env['API_BASE_URL'];
-    final code = IntentResultStore.code;
+    String? code = IntentResultStore.code;
     final market = IntentResultStore.market;
     if (baseUrl == null || code == null || market == null) return;
+
+    code = code.split('.').first;
 
     final uri = Uri.parse('$baseUrl/api/indicator?code=$code&market=$market');
 
@@ -186,12 +188,14 @@ class _RsiPageState extends State<RsiPage> {
 
   Future<String> fetchSummaryFromApi(String title) async {
     final baseUrl = dotenv.env['API_BASE_URL'];
-    final code = IntentResultStore.code;
+    String? code = IntentResultStore.code;
     final market = IntentResultStore.market;
     final metricKey = metricMap[title] ?? title.toLowerCase();
     if (baseUrl == null || code == null || market == null) {
       return '$title 정보를 불러오는 데 실패했습니다.';
     }
+
+    code = code.split('.').first;
 
     final uri = Uri.parse(
       '$baseUrl/api/indicator/explain?code=$code&market=$market&metric=$metricKey',
