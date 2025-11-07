@@ -18,27 +18,22 @@ class ChartPage extends StatefulWidget {
 }
 
 class _ChartPageState extends State<ChartPage> {
-  /* ────────────────────────────── UI State ────────────────────────────── */
   String selectedTimeline = '3달';
   bool _isMicrophoneActive = false;
   String _recognizedText = '';
   bool _isLoading = true;
-
-  /* ───────────────────────────── Data State ───────────────────────────── */
   List<ChartData> _chartData = [];
 
-  /* ───────────────────────────── Controllers ──────────────────────────── */
   final VoiceScrollHandler _voiceScrollHandler = VoiceScrollHandler();
   final ScrollController _scrollController = ScrollController();
 
-  /* ─────────────────────────────── Constants ──────────────────────────── */
-  static const _pagePadding = EdgeInsets.fromLTRB(24, 28, 24, 16);
-  //static const _graphHeight = 800.0;
+  // ✅ GlobalKey 타입을 public ChartGraphState로 수정
+  final GlobalKey<ChartGraphState> _chartGraphKey =
+      GlobalKey<ChartGraphState>();
 
-  /* intent 초기화 중복 방지 */
   bool _didInitFromIntent = false;
+  static const _pagePadding = EdgeInsets.fromLTRB(24, 28, 24, 16);
 
-  /* ───────────────────────────── Lifecycle ────────────────────────────── */
   @override
   void initState() {
     super.initState();
@@ -50,19 +45,17 @@ class _ChartPageState extends State<ChartPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_didInitFromIntent) return; // 가드
+    if (_didInitFromIntent) return;
     _didInitFromIntent = true;
     _initFromIntentIfAny();
   }
 
-  /* ─────────────────────────── Intent 초기화 ──────────────────────────── */
   void _initFromIntentIfAny() {
     if (IntentResultStore.chartJsonList.isNotEmpty) {
       final period = IntentResultStore.period ?? '3mo';
       final timeline = _periodToTimeline(period);
 
       if (IntentResultStore.intent == "current_price") {
-        // 바로 실시간 모드 진입
         selectedTimeline = "실시간";
         connectLive();
         _isLoading = false;
@@ -83,7 +76,6 @@ class _ChartPageState extends State<ChartPage> {
     }
   }
 
-  /* ───────────────────────────── Voice Hooks ──────────────────────────── */
   void _stopListeningManually() {
     _voiceScrollHandler.stopImmediately(
       context,
@@ -93,7 +85,7 @@ class _ChartPageState extends State<ChartPage> {
 
   Future<void> _onRefresh() async {
     setState(() {
-      _recognizedText = ""; // 새로 시작할 때 초기화
+      _recognizedText = "";
     });
 
     _voiceScrollHandler.startListening(
@@ -104,18 +96,15 @@ class _ChartPageState extends State<ChartPage> {
     );
   }
 
-  /* ───────────────────────────── Timeline API ─────────────────────────── */
   void updateTimeline(String newTimeline) {
     setState(() {
       selectedTimeline = newTimeline;
 
       if (newTimeline == "실시간") {
-        selectedTimeline = "실시간";
         disconnectLive();
         connectLive();
       } else {
         disconnectLive();
-        // 기존 REST fetch 실행 or 재렌더해서 React 전달
       }
     });
   }
@@ -125,18 +114,29 @@ class _ChartPageState extends State<ChartPage> {
 
   void connectLive() {
     final code = IntentResultStore.code!;
-
     liveSocket.connect(code);
 
-    liveSub = liveSocket.stream?.listen((event) {
+    liveSub = liveSocket.stream?.listen((event) async {
       final msg = jsonDecode(event);
       print("WS msg : $msg");
 
-      if (msg["current_price"] != null) {
+      try {
+        await _chartGraphKey.currentState?.runJavaScript(
+          'window.updateRealTime(${jsonEncode(msg)})',
+        );
+        print("✅ React로 실시간 데이터 전달 완료");
+      } catch (e) {
+        print("❌ JS 호출 실패: $e");
+      }
+
+      if (msg["current_price"] != null && _chartData.isNotEmpty) {
         setState(() {
           final last = _chartData.last;
-
-          final int newPrice = msg["current_price"].toInt();
+          final int newPrice = (msg["current_price"] as num).toInt();
+          final int safeVolume =
+              ((msg["volume"] as num?)?.toInt() ?? last.volume) < 0
+                  ? last.volume
+                  : (msg["volume"] as num?)?.toInt() ?? last.volume;
 
           final updated = ChartData(
             timestamp: last.timestamp,
@@ -144,7 +144,7 @@ class _ChartPageState extends State<ChartPage> {
             high: newPrice > last.high ? newPrice : last.high,
             low: newPrice < last.low ? newPrice : last.low,
             close: newPrice,
-            volume: msg["volume"] as int? ?? last.volume,
+            volume: safeVolume,
             fluctuationRate:
                 (msg["fluctuation_rate"] as num?)?.toDouble() ??
                 last.fluctuationRate,
@@ -152,7 +152,7 @@ class _ChartPageState extends State<ChartPage> {
 
           final newList = List<ChartData>.from(_chartData);
           newList[newList.length - 1] = updated;
-          _chartData = newList;
+          _chartData = List<ChartData>.from(newList);
         });
       }
     });
@@ -198,7 +198,6 @@ class _ChartPageState extends State<ChartPage> {
     }
   }
 
-  /* ─────────────────────────────── Build ──────────────────────────────── */
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -219,16 +218,12 @@ class _ChartPageState extends State<ChartPage> {
     );
   }
 
-  /* ───────────────────────────── Sections ─────────────────────────────── */
-
   Widget _buildScrollableBody(BuildContext context) {
     return RefreshIndicator(
       onRefresh: _onRefresh,
       child: ListView(
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
-
-        //physics: const ClampingScrollPhysics(),
         children: [
           Padding(
             padding: _pagePadding,
@@ -242,7 +237,7 @@ class _ChartPageState extends State<ChartPage> {
                 _buildGraphCard(context),
                 const SizedBox(height: 18),
                 _buildFooterHint(context),
-                const SizedBox(height: 100), // 하단 버튼과 여유 간격
+                const SizedBox(height: 100),
               ],
             ),
           ),
@@ -272,7 +267,7 @@ class _ChartPageState extends State<ChartPage> {
             );
           },
           icon: const Icon(Icons.analytics_outlined),
-          label: const Text('투자지표 보기'), // 색은 버튼 테마에서 처리
+          label: const Text('투자지표 보기'),
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
@@ -307,9 +302,6 @@ class _ChartPageState extends State<ChartPage> {
   Widget _buildGraphCard(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-
-    // final width = MediaQuery.of(context).size.width;
-    // final graphHeight = width * 1.1; // 가로 대비 1.1배 비율
     final graphHeight = 800.0;
 
     return Container(
@@ -331,10 +323,10 @@ class _ChartPageState extends State<ChartPage> {
               ),
             )
           else
-            // SizedBox(height: _graphHeight, child: ChartGraph(data: _chartData)),
             SizedBox(
               height: graphHeight,
               child: ChartGraph(
+                key: _chartGraphKey,
                 code: IntentResultStore.code!,
                 period:
                     selectedTimeline == "실시간"
@@ -343,7 +335,6 @@ class _ChartPageState extends State<ChartPage> {
                 market: IntentResultStore.market!,
               ),
             ),
-
           const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerRight,

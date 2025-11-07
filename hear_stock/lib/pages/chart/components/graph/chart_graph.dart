@@ -1,11 +1,11 @@
+// chart_graph.dart
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
-
 import '../../../../stores/intent_result_store.dart';
+import 'package:flutter/foundation.dart';
 
 class ChartGraph extends StatefulWidget {
   final List<dynamic>? data;
@@ -16,11 +16,13 @@ class ChartGraph extends StatefulWidget {
   const ChartGraph({this.data, this.code, this.period, this.market, Key? key})
     : super(key: key);
 
+  // ✅ 외부에서 State 접근 가능하도록 public
   @override
-  State<ChartGraph> createState() => _ChartGraphState();
+  ChartGraphState createState() => ChartGraphState();
 }
 
-class _ChartGraphState extends State<ChartGraph> {
+// ✅ State 클래스 public으로 선언
+class ChartGraphState extends State<ChartGraph> {
   late final WebViewController _controller;
   bool _isLoaded = false;
 
@@ -41,19 +43,16 @@ class _ChartGraphState extends State<ChartGraph> {
               },
             ),
           )
-          // React 페이지 주소
           ..loadRequest(
             Uri.parse('https://hearstock-frontend-react-1.vercel.app/webView'),
           );
   }
 
-  // Flutter → React 데이터 전달
   Future<void> _sendStockData() async {
     final String baseUrl = dotenv.env['API_BASE_URL'] ?? '';
     final code = widget.code ?? IntentResultStore.code;
     String? period;
 
-    // current_price 인 경우 period 불필요
     if (IntentResultStore.intent != "current_price") {
       period = widget.period ?? IntentResultStore.period;
     }
@@ -69,10 +68,19 @@ class _ChartGraphState extends State<ChartGraph> {
     print('Flutter → React 전달 데이터: $data');
 
     try {
-      await _controller.runJavaScript('window.updateStockChart($data)');
+      await runJavaScript('window.updateStockChart($data)');
       print("JS 호출 완료됨");
     } catch (e) {
       print('JavaScript 실행 실패: $e');
+    }
+  }
+
+  // ✅ 외부에서 JS 실행 가능
+  Future<void> runJavaScript(String jsCode) async {
+    try {
+      await _controller.runJavaScript(jsCode);
+    } catch (e) {
+      print('JS 실행 실패: $e');
     }
   }
 
@@ -86,14 +94,6 @@ class _ChartGraphState extends State<ChartGraph> {
       ),
       child: Stack(
         children: [
-          // WebViewWidget(
-          //   controller: _controller,
-          //   gestureRecognizers: {
-          //     Factory<OneSequenceGestureRecognizer>(
-          //       () => EagerGestureRecognizer(),
-          //     ),
-          //   },
-          // ),
           WebViewWidget(
             controller: _controller,
             gestureRecognizers:
