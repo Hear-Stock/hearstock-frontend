@@ -35,7 +35,8 @@ class _ChartGraphState extends State<ChartGraph> {
           ..setNavigationDelegate(
             NavigationDelegate(
               onPageFinished: (url) async {
-                print("WebView 로드 완료 => JS 호출 시작");
+                print("WebView 로드 완료 => JS 호출 대기중 (delay)");
+                await Future.delayed(const Duration(milliseconds: 300));
                 setState(() => _isLoaded = true);
                 await _sendStockData();
               },
