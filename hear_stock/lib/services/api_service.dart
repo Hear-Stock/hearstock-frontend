@@ -45,8 +45,7 @@ class ApiService {
       IntentResultStore.name = data['name'];
       IntentResultStore.code = data['code'];
       IntentResultStore.market = data['market'];
-      IntentResultStore.market = data['market'];
-      IntentResultStore.period = null;
+      IntentResultStore.period = "current_price";
 
       Navigator.pushNamed(context, '/chart');
       return;

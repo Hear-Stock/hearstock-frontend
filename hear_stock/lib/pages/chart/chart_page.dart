@@ -57,25 +57,38 @@ class _ChartPageState extends State<ChartPage> {
 
   /* ─────────────────────────── Intent 초기화 ──────────────────────────── */
   void _initFromIntentIfAny() {
+    if (IntentResultStore.intent == "current_price") {
+      setState(() {
+        selectedTimeline = "실시간";
+        _isLoading = false;
+      });
+      connectLive();
+      _isLoading = false;
+      return;
+    }
+
     if (IntentResultStore.chartJsonList.isNotEmpty) {
       final period = IntentResultStore.period ?? '3mo';
       final timeline = _periodToTimeline(period);
 
-      if (IntentResultStore.intent == "current_price") {
-        // 바로 실시간 모드 진입
-        selectedTimeline = "실시간";
-        connectLive();
-        _isLoading = false;
-        return;
-      }
-
       setState(() {
         selectedTimeline = timeline;
-        _chartData =
-            IntentResultStore.chartJsonList
-                .cast<Map<String, dynamic>>()
-                .map((e) => ChartData.fromJson(e))
-                .toList();
+        // _chartData =
+        //     IntentResultStore.chartJsonList
+        //         .cast<Map<String, dynamic>>()
+        //         .map((e) => ChartData.fromJson(e))
+        //         .toList();
+        _chartData = [
+          ChartData(
+            timestamp: DateTime.now().millisecondsSinceEpoch.toString(),
+            open: 0,
+            high: 0,
+            low: 0,
+            close: 0,
+            volume: 0,
+            fluctuationRate: 0,
+          ),
+        ];
         _isLoading = false;
       });
     } else {
@@ -130,7 +143,6 @@ class _ChartPageState extends State<ChartPage> {
 
     liveSub = liveSocket.stream?.listen((event) {
       final msg = jsonDecode(event);
-      print("WS msg : $msg");
 
       if (msg["current_price"] != null) {
         setState(() {
@@ -325,7 +337,7 @@ class _ChartPageState extends State<ChartPage> {
                 code: IntentResultStore.code!,
                 period:
                     selectedTimeline == "실시간"
-                        ? "live"
+                        ? "current_price"
                         : _timelineToPeriod(selectedTimeline),
                 market: IntentResultStore.market!,
               ),

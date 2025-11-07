@@ -52,18 +52,14 @@ class _ChartGraphState extends State<ChartGraph> {
   Future<void> _sendStockData() async {
     final String baseUrl = dotenv.env['API_BASE_URL'] ?? '';
     final code = widget.code ?? IntentResultStore.code;
-    String? period;
 
-    // current_price 인 경우 period 불필요
-    if (IntentResultStore.intent != "current_price") {
-      period = widget.period ?? IntentResultStore.period;
-    }
     final market = widget.market ?? IntentResultStore.market;
+    final period = widget.period ?? IntentResultStore.period;
 
     final data = jsonEncode({
       'baseUrl': baseUrl,
       'code': code,
-      if (period != null) 'period': period,
+      'period': period,
       'market': market,
     });
 
