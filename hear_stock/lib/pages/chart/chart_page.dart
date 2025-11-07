@@ -136,7 +136,7 @@ class _ChartPageState extends State<ChartPage> {
         setState(() {
           final last = _chartData.last;
 
-          final int newPrice = msg["current_price"] as int;
+          final int newPrice = msg["current_price"].toInt();
 
           final updated = ChartData(
             timestamp: last.timestamp,
